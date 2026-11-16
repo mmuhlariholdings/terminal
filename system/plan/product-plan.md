@@ -1,6 +1,6 @@
 # Terminal 1: product plan
 
-**Version:** 1.1 (2026-11-16) · **Owner:** project owner · **Status:** Phase 0 (bench prototype) not started; first design pass done
+**Version:** 1.2 (2026-11-17) · **Owner:** project owner · **Status:** Phase 0 (bench prototype) not started; first design pass done
 **Source:** converted from `terminal-1-prototype-plan.pdf` (v1.0, 2026-11-16) and kept here as the living plan. Changes go in the
 changelog at the end. Why each major decision was made: [`docs/decisions/`](../../docs/decisions/README.md). Shared numbers
 (sizes, pin maps, protocols): [`interfaces.md`](interfaces.md).
@@ -228,8 +228,9 @@ part with our own. Week numbers are first targets; phases 2 and 3 overlap.
 | **4 · Daily driver** | 14–18 | Battery-life tuning, disk encryption, key map refined through real use | Two weeks of real use without reaching for the laptop |
 | **5 · Terminal 2** | later | Mobile modem, bigger battery, optional CM5, what it takes to sell: ICASA approval, a small batch, support | |
 
-**Where we are (2026-11-16):** first design pass done: Onshape model of the full stack, both schematics, board layouts in
-progress, keyboard firmware and Linux setup written but not yet run on hardware, website. Phase 0 parts not yet ordered.
+**Where we are (2026-11-17):** first design pass done: Onshape model of the full stack; carrier board schematic (ERC clean)
+and layout (high-speed pairs still to route by hand); keyboard firmware and Linux setup written and unit tested but not yet
+run on hardware; website. Keyboard board schematic and layout still to do. Phase 0 parts not yet ordered.
 
 ## 12. Work packages
 
@@ -269,6 +270,8 @@ progress, keyboard firmware and Linux setup written but not yet run on hardware,
 - **Name.** Terminal 1 is the working name.
 
 ## Changelog
+
+- **1.2 (2026-11-17):** website on GitHub Pages confirmed (record 0009 accepted); Heroku hosting considered and dropped.
 
 - **1.1 (2026-11-16):** converted from the PDF into this living plan. Corrections and additions from the first design pass:
   5 V for the CM4 from a separate boost after the BQ25895's power path (the BQ25895 cannot charge and boost at once; record 0004);

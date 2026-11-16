@@ -9,7 +9,7 @@ pad, battery, USB-C socket and power button. It proves the boards, battery and s
 | [`terminal-1.fs`](terminal-1.fs) | **The model.** Source of the Onshape Feature Studio "Terminal 1 FS". Every number comes from [`system/plan/interfaces.md`](../../system/plan/interfaces.md) |
 | [`terminal-1-check.fs`](terminal-1-check.fs) | Test feature: mass, bounding box and interference between every pair of parts |
 | [`build-sheet.md`](build-sheet.md) | Design spec: coordinates, parts, materials, mass, open items |
-| `terminal-1.glb` | glTF export used by the website (export from Onshape, steps below) |
+| [`terminal-1.glb`](terminal-1.glb) | glTF export (2026-11-17, internal parts hidden: 13 parts). Same file as `website/public/assets/models/terminal-1.glb` |
 
 **Onshape document:** [Terminal 1](https://cad.onshape.com/documents/8bfe7e43f7d7ec8135f9a829/w/29c38cad0998e4a6472b08e0/e/69201118ddf43601f28283ef)
 · Feature Studio **Terminal 1 FS** (element `3bc3af66b798a4c48861a367`).
@@ -32,7 +32,12 @@ To see a cross-section: right-click the empty canvas → **Section view** → pi
 2. Format **GLTF** (choose the binary `.glb` option if offered), resolution **Medium**, tick **Export as one file**. Click **Export**.
 3. Save the downloaded file as `hardware/enclosure/terminal-1.glb` (rename it: lowercase, hyphens), **and** copy it to
    `website/public/assets/models/terminal-1.glb`. The website's 3D viewer picks it up automatically.
-4. Optional: also export with Exploded view spacing = 12 mm as `terminal-1-exploded.glb` for the website's layers view.
+4. Optional: edit the feature to **Exploded view spacing 12 mm** with **Show internal parts** ticked, export again, and save it as
+   `website/public/assets/models/terminal-1-exploded.glb`. The website then shows an **Exploded view** button that swaps to it.
+
+Colours: Onshape writes its colours into glTF without converting them, so they look washed out. The website corrects this
+when it loads the model (`finishMaterials` in `website/public/assets/js/site.js`, keyed on the `T1_C_*` colours in
+`terminal-1.fs`), so a fresh export needs no other changes. If you change a colour in the FeatureScript, update that table too.
 
 ## Changing the model
 

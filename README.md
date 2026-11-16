@@ -48,9 +48,9 @@ proven modules where building them would teach little (the CM4 and the keyboard)
 |---|---|---|
 | Plan | Converted to a living plan, decisions recorded | [`system/plan/`](system/plan/) · [`docs/decisions/`](docs/decisions/README.md) |
 | 3D model | Full stack modelled in Onshape (FeatureScript), regenerates; fit check done | [`hardware/enclosure/`](hardware/enclosure/README.md) |
-| Keyboard and power board | Generated schematic and board, first pass (see its README for ERC / DRC status) | [`hardware/keyboard-board/`](hardware/keyboard-board/) |
-| CM4 carrier board | Generated schematic and board, first pass; high-speed routing needs hands | [`hardware/carrier-board/`](hardware/carrier-board/) |
-| Keyboard firmware | Written for RP2040 (Pico SDK + TinyUSB); not yet run on hardware | [`firmware/keyboard-board/`](firmware/keyboard-board/) |
+| Keyboard and power board | Pin map and circuit choices settled in the firmware; **schematic and layout not written yet** | [`hardware/keyboard-board/`](hardware/keyboard-board/README.md) |
+| CM4 carrier board | Schematic ERC clean; layout DRC 0 violations; DSI and USB pairs still to route by hand | [`hardware/carrier-board/`](hardware/carrier-board/README.md) |
+| Keyboard firmware | Written (Pico SDK + TinyUSB); host tests 5/5 pass; cross-compile runs in CI; not yet on hardware | [`firmware/keyboard-board/`](firmware/keyboard-board/README.md) |
 | Linux | Installer, configs and status daemon written and unit tested; not yet run on a CM4 | [`linux/`](linux/README.md) |
 | Website | Static launch page with the 3D model | [`website/`](website/README.md) |
 

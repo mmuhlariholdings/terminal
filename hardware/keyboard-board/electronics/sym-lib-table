@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "terminal-1")(type "KiCad")(uri "${KIPRJMOD}/terminal-1.kicad_sym")(options "")(descr "Terminal 1 generated symbols"))
+)

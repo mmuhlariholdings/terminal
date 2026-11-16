@@ -23,7 +23,7 @@ the single home of the project: plan, CAD, electronics, firmware, Linux, docs an
   `tools/fetch_tools.sh`). Edit the script, never the output.
 - `firmware/keyboard-board/`: RP2040 (Pico SDK + TinyUSB); `src/board.h` must match `electronics/pin-map.md`.
 - `linux/`: `install.sh`, `config/`, `status-daemon/` (tests: `python3 -m unittest discover -s linux/status-daemon/tests`), `image/` (pi-gen).
-- `website/public/`: static launch page (GitHub Pages). Repo URL constant `REPO_URL` in `assets/js/site.js`.
+- `website/public/`: static launch page (GitHub Pages, `.github/workflows/website.yml`). Repo URL constant `REPO_URL` in `assets/js/site.js`.
 
 ## Onshape
 

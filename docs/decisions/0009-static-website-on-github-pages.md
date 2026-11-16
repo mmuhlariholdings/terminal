@@ -1,8 +1,8 @@
 # 0009. Static website on GitHub Pages
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-16
-- **Decided by:** Proposed by the AI assistant; awaiting owner approval
+- **Decided by:** Proposed by the AI assistant; accepted by the owner on 2026-11-17 (Heroku considered and dropped)
 
 ## Context
 

@@ -1,6 +1,6 @@
 # Terminal 1: interfaces and shared numbers
 
-**Version:** 0.2 (2026-11-16) · **Status:** first draft, every number marked *verify* is a hand estimate or from memory.
+**Version:** 0.3 (2026-11-17) · **Status:** first draft, every number marked *verify* is a hand estimate or from memory.
 
 This file is the **single source of truth** for numbers that more than one part of the project depends on: the device
 envelope, board outlines, the cable between the two boards, the CM4 pins we use, the RP2040 pins and the USB protocol
@@ -65,8 +65,12 @@ from here. **Change it here first**, then in every place listed under "Used by".
 
 - Carrier board: CM4 centred at X 0, Y 112 on the **front** side (facing the screen), display FPC connector at the top edge,
   inter-board FFC connector at the bottom edge centre, CR2032 + RTC on the back, U.FL lead from the CM4 to the flex antenna at the top.
-- Keyboard board: Q20 keyboard and nav row on the **front**, everything else on the **back**; USB-C receptacle (mid-mount) at the
-  bottom edge centre (Y 4, port opening at Y 0); power button on the right side edge at Y 50; battery JST-SH 2-pin on the back.
+- Keyboard board: Q20 keyboard and nav row on the **front**, everything else on the **back**; USB-C receptacle at the
+  bottom edge centre (Y 4, port opening at Y 0; Rev A uses a **top-mount** socket on the back, 3.2 mm tall, so the mid-frame
+  needs a cut-out there: a mid-mount socket is an open item); power button on the right side edge at Y 50; the cell is wired to
+  **three solder pads (BAT+, NTC, BAT−)** on the back at the left edge (X −33.6, Y 26–36), not a JST-SH: the boost draws up to
+  about 6 A from the cell and JST-SH contacts are rated about 1 A. Parts taller than 2.0 mm on the back (USB-C 3.2, boost
+  inductor 3.0, power button) need mid-frame cut-outs: positions in `hardware/keyboard-board/build-sheet.md`.
 
 ## 4. Inter-board cable: keyboard board ↔ carrier board
 
@@ -112,9 +116,10 @@ from here. **Change it here first**, then in every place listed under "Used by".
 ## 6. Keyboard board power architecture
 
 ```
-USB-C (sink, 5.1 k CC pull-downs) → BQ25895 charger with power path → VSYS (3.5–4.4 V) ─┬→ TPS61088 boost → +5V_CM4 (5.1 V, 3 A) → cable
-                                         ↕ BAT                                         ├→ 3.3 V LDO (always on) → RP2040, MAX17048, keyboard
-                                     1S LiPo 855570 ← MAX17048 gauge                    └→ keyboard backlight driver
+USB-C (sink, 5.1 k CC pull-downs) → BQ25895 charger with power path → VSYS (3.5–4.4 V) ─┬→ TPS61089 boost → +5V_CM4 (5.08 V, 3 A peak) → cable
+                                         ↕ BAT                                         └→ 3.3 V LDO (always on) → RP2040, MAX17048, USB switch,
+                                     1S LiPo 855570 ← MAX17048 gauge                                               keyboard backlight (low-side MOSFET),
+                                                                                                                   trackpad 2.8 V / 1.8 V LDOs
 ```
 
 - The BQ25895 cannot charge and boost to 5 V at the same time (its boost drives VBUS), so the 5 V for the CM4 comes from a
@@ -169,4 +174,5 @@ The keyboard matrix size and FPC pinout come from the BBQ20KBD design and are re
 
 - 0.1 (2026-11-16): first draft from the prototype plan.
 - 0.2 (2026-11-16): carrier board Rev A (`hardware/carrier-board`): SDA0/SCL0 confirmed as GPIO 44/45 (CM4 datasheet 2.9); GPIO 27 added as display enable on DSI pin 17, GPIO 18 to DSI pin 18; USB_OTG_ID and EEPROM_nWP handling added; carrier-side series resistors and the GLOBAL_EN 5 V pull-up noted on the cable table; CR2032 holder height exception in the stack-up. Open: the panel FPC leaves the module's bottom edge but the carrier's display connector is at its top edge (section 3): rotate the panel 180° or re-plan, see the carrier build sheet.
+- 0.3 (2026-11-17): keyboard board Rev A: boost is the **TPS61089** (TPS61088 datasheet not reachable to verify its pinout; same family, 7 A switch, peak limit set to 8.1 A), output 5.08 V; cell on three solder pads instead of a JST-SH 2-pin (current rating, and the NTC wire); top-mount USB-C needs a frame cut-out; keyboard backlight from +3V3 as the BBQ20KBD (was drawn from VSYS). Reasons and calculations: `hardware/keyboard-board/electronics/circuit-notes.md`.
 - 0.2 (2026-11-16): keyboard board 74 × 66 → **74 × 60** (Y 4–64): the taller board overlapped the screen module in the CAD layout. Screen module Y 64.4–145.0, cover glass Y 63–148.

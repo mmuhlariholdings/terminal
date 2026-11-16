@@ -10,116 +10,28 @@
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var $ = function (sel, root) { return (root || document).querySelector(sel); };
   var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
-  var clamp = function (v, a, b) { return Math.min(b, Math.max(a, v)); };
 
   /* ---------- repository links ---------- */
   $$('[data-repo]').forEach(function (a) {
     a.href = REPO_URL + a.getAttribute('data-repo');
   });
 
-  /* ---------- nav ---------- */
+  /* ---------- nav (menu button on narrow screens) ---------- */
   var nav = $('.nav');
   var menuBtn = $('.nav__menu-btn');
   function setMenu(open) {
     nav.classList.toggle('is-open', open);
     menuBtn.setAttribute('aria-expanded', String(open));
   }
-  menuBtn.addEventListener('click', function () { setMenu(!nav.classList.contains('is-open')); });
-  $$('.nav__links a').forEach(function (a) { a.addEventListener('click', function () { setMenu(false); }); });
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && nav.classList.contains('is-open')) { setMenu(false); menuBtn.focus(); }
-  });
-
-  /* ---------- reveal on scroll ---------- */
-  var io = 'IntersectionObserver' in window ? new IntersectionObserver(function (entries) {
-    entries.forEach(function (en) {
-      if (en.isIntersecting) { en.target.classList.add('is-in'); io.unobserve(en.target); }
+  if (nav && menuBtn) {
+    menuBtn.addEventListener('click', function () { setMenu(!nav.classList.contains('is-open')); });
+    $$('.nav__links a').forEach(function (a) { a.addEventListener('click', function () { setMenu(false); }); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && nav.classList.contains('is-open')) { setMenu(false); menuBtn.focus(); }
     });
-  }, { rootMargin: '0px 0px -12% 0px', threshold: 0.08 }) : null;
-  $$('.reveal, .rm-row, .battery-meter').forEach(function (el) {
-    if (io && !reduceMotion) io.observe(el); else el.classList.add('is-in');
-  });
-
-  /* ---------- statement: words light up as you scroll ---------- */
-  var statement = $('[data-words]');
-  var words = [];
-  if (statement && !reduceMotion) {
-    var split = function (node, extra) {
-      Array.prototype.slice.call(node.childNodes).forEach(function (child) {
-        if (child.nodeType === 3) {
-          var frag = document.createDocumentFragment();
-          child.textContent.split(/(\s+)/).forEach(function (part) {
-            if (!part) return;
-            if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(part)); return; }
-            var s = document.createElement('span');
-            s.className = 'w' + (extra ? ' ' + extra : '');
-            s.textContent = part;
-            frag.appendChild(s);
-            words.push(s);
-          });
-          node.replaceChild(frag, child);
-        } else if (child.nodeType === 1) {
-          split(child, child.classList.contains('hl') ? 'hl' : extra);
-        }
-      });
-    };
-    split(statement);
   }
 
-  /* ---------- exploded stack ---------- */
-  var explode = $('#explode');
-  var stack = $('#stack');
-  var plates = $$('.plate', stack);
-  var legend = $$('#stack-legend li');
-  var lastActive = -1;
-  function setActiveLayer(n) {
-    if (n === lastActive) return;
-    lastActive = n;
-    legend.forEach(function (li, i) { li.classList.toggle('is-active', i === n); });
-    var layer = n >= 0 && legend[n] ? Number(legend[n].getAttribute('data-layer')) : -1;
-    plates.forEach(function (p) { p.classList.toggle('is-active', Number(p.style.getPropertyValue('--i')) === layer); });
-  }
-  if (reduceMotion && stack) { stack.style.setProperty('--p', '1'); }
-
-  /* ---------- scroll loop (one rAF per frame) ---------- */
-  var ticking = false;
-  function onScroll() {
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(update);
-  }
-  function update() {
-    ticking = false;
-    var vh = window.innerHeight;
-    nav.classList.toggle('is-scrolled', window.scrollY > 8);
-
-    if (words.length) {
-      var r = statement.getBoundingClientRect();
-      var p = clamp((vh * 0.82 - r.top) / (vh * 0.35 + r.height), 0, 1);
-      var lit = Math.round(p * words.length);
-      for (var i = 0; i < words.length; i++) words[i].classList.toggle('is-lit', i < lit);
-    }
-
-    if (explode && stack && !reduceMotion) {
-      var er = explode.getBoundingClientRect();
-      var ep;
-      var sticky = window.matchMedia('(min-width: 901px)').matches;
-      if (sticky) {
-        ep = clamp(-er.top / Math.max(1, er.height - vh), 0, 1);
-      } else {
-        var st = $('.stack-stage').getBoundingClientRect();
-        ep = clamp((vh - st.top) / (vh * 0.9), 0, 1);
-      }
-      var spread = clamp((ep - 0.05) / 0.55, 0, 1);
-      spread = spread * spread * (3 - 2 * spread); // smoothstep
-      stack.style.setProperty('--p', spread.toFixed(4));
-      if (sticky) setActiveLayer(ep < 0.08 ? -1 : Math.min(legend.length - 1, Math.floor((ep - 0.08) / 0.84 * legend.length)));
-      else setActiveLayer(-1);
-    }
-  }
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', onScroll);
-  update();
+  /* No scroll-driven effects: the page is static and shown straight away. */
 
   /* ---------- terminal demo ---------- */
   var termBody = $('#term-body');
@@ -142,8 +54,8 @@
       return seg[0] ? '<span class="' + seg[0] + '">' + esc(seg[1]) + '</span>' : esc(seg[1]);
     }).join('');
   };
-  var LOCAL = [['t-p', 't1 '], ['t-d', '~'], ['t-p', ' ❯ ']];
-  var LOCAL_API = [['t-p', 't1 '], ['t-d', '~/api'], ['t-p', ' ❯ ']];
+  var LOCAL = [['t-p', 't1 '], ['t-d', '~'], ['t-p', ' $ ']];
+  var LOCAL_API = [['t-p', 't1 '], ['t-d', '~/api'], ['t-p', ' $ ']];
   var REMOTE = [['t-p', 'ops@build-01'], ['', ':'], ['t-d', '~'], ['', '$ ']];
 
   var SCENES = [
@@ -315,25 +227,6 @@
     play(0);
   }
 
-  /* ---------- keyboard nav-row demo ---------- */
-  var navrow = $('.navrow');
-  if (navrow && !reduceMotion && 'IntersectionObserver' in window) {
-    var keys = $$('[data-key]', navrow);
-    var seq = [0, 2, 2, 3, 1, 4];
-    var step = 0;
-    var timer = null;
-    var pressOnce = function () {
-      keys.forEach(function (k) { k.classList.remove('is-down', 'is-active'); });
-      var k = keys[seq[step++ % seq.length]];
-      k.classList.add(k.classList.contains('trackpad') ? 'is-active' : 'is-down');
-      setTimeout(function () { k.classList.remove('is-down', 'is-active'); }, 520);
-    };
-    new IntersectionObserver(function (en) {
-      if (en[0].isIntersecting && !timer) timer = setInterval(pressOnce, 900);
-      else if (!en[0].isIntersecting && timer) { clearInterval(timer); timer = null; }
-    }, { threshold: 0.5 }).observe(navrow);
-  }
-
   /* ---------- 3D model (graceful when the .glb is not exported yet) ---------- */
   var stage = $('#model-stage');
   if (stage) {
@@ -347,6 +240,56 @@
       note.hidden = state === 'ready';
     };
     var fallback = function () { setState('fallback', '3D model coming with the first CAD export'); };
+
+    /* Onshape's glTF export writes sRGB colours as if they were linear and sets no finish, so the black frame renders mid-grey
+       and everything looks flat. Convert each colour to linear and give it a finish, keyed on the colours in
+       hardware/enclosure/terminal-1.fs (T1_C_*). A new export needs no code change unless those colours change. */
+    var FINISHES = [
+      { rgb: [0.11, 0.11, 0.12], metallic: 0.55, roughness: 0.35 },   // mid-frame, deck, button: black anodised aluminium
+      { rgb: [0.015, 0.015, 0.02], metallic: 0.0, roughness: 0.06 },  // cover glass
+      { rgb: [0.04, 0.05, 0.06], metallic: 0.0, roughness: 0.15 },    // display
+      { rgb: [0.05, 0.05, 0.06], metallic: 0.2, roughness: 0.32 },    // carbon back
+      { rgb: [0.08, 0.08, 0.09], metallic: 0.0, roughness: 0.55 },    // keys
+      { rgb: [0.74, 0.75, 0.77], metallic: 1.0, roughness: 0.28 },    // frets, trackpad: steel
+      { rgb: [0.62, 0.64, 0.66], metallic: 0.0, roughness: 0.75 }     // radio window: fibreglass
+    ];
+    var toLinear = function (c) { return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    var finishMaterials = function (viewer) {
+      try {
+        (viewer.model ? viewer.model.materials : []).forEach(function (m) {
+          var pbr = m.pbrMetallicRoughness;
+          var c = pbr.baseColorFactor;
+          var best = null, dist = 1e9;
+          FINISHES.forEach(function (f) {
+            var d = Math.abs(f.rgb[0] - c[0]) + Math.abs(f.rgb[1] - c[1]) + Math.abs(f.rgb[2] - c[2]);
+            if (d < dist) { dist = d; best = f; }
+          });
+          pbr.setBaseColorFactor([toLinear(c[0]), toLinear(c[1]), toLinear(c[2]), c[3]]);
+          if (best && dist < 0.06) {
+            pbr.setMetallicFactor(best.metallic);
+            pbr.setRoughnessFactor(best.roughness);
+          }
+        });
+      } catch (e) { /* keep the model as exported */ }
+    };
+
+    /* Optional exploded export (Onshape: Exploded view spacing 12 mm, saved as terminal-1-exploded.glb). */
+    var offerExplodedFile = function () {
+      var explodedSrc = src.replace(/\.glb$/, '-exploded.glb');
+      fetch(explodedSrc, { method: 'HEAD', cache: 'no-store' }).then(function (r) {
+        var type = r.headers.get('content-type') || '';
+        if (!r.ok || type.indexOf('text/html') !== -1) return;
+        var btn = $('#explode-btn');
+        $('#model-toolbar').hidden = false;
+        btn.hidden = false;
+        btn.addEventListener('click', function () {
+          var on = btn.getAttribute('aria-pressed') !== 'true';
+          btn.setAttribute('aria-pressed', String(on));
+          mv.addEventListener('load', function () { finishMaterials(mv); }, { once: true });
+          mv.src = on ? explodedSrc : src;
+        });
+      }).catch(function () {});
+    };
 
     var loadScript = function () {
       return new Promise(function (resolve, reject) {
@@ -370,8 +313,10 @@
       }).then(function () {
         if (reduceMotion) mv.removeAttribute('auto-rotate');
         mv.addEventListener('load', function () {
+          finishMaterials(mv);
           setState('ready');
           var anims = mv.availableAnimations || [];
+          if (!anims.length) offerExplodedFile();
           if (anims.length) {
             var name = anims.filter(function (a) { return /explod|layer/i.test(a); })[0] || anims[0];
             var btn = $('#explode-btn');

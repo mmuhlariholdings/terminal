@@ -5,48 +5,68 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Not found — Terminal 1</title>
   <meta name="robots" content="noindex">
-  <meta name="theme-color" content="#000000">
-  <meta name="color-scheme" content="dark">
-  <!-- GitHub Pages serves this file for any missing path, so asset URLs must not be relative.
-       This page is self-contained; the only link home is resolved by the script below. -->
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%230b0b0c'/%3E%3Cpath d='M17 22l11 10-11 10' fill='none' stroke='%235be49b' stroke-width='5.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Crect x='32' y='39' width='16' height='5.5' rx='2.75' fill='%23f5f5f7'/%3E%3C/svg%3E">
+  <meta name="theme-color" content="#F2F0EA">
+  <meta name="color-scheme" content="light">
+  <!-- GitHub Pages serves this file for any missing path, so asset URLs cannot be relative.
+       This page is self-contained; the script below resolves the site root, the link home and the fonts. -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='2' fill='%23151513'/%3E%3Crect x='18' y='14' width='18' height='36' fill='%23FFB000'/%3E%3C/svg%3E">
   <style>
-    :root { --bg: #000; --text: #f5f5f7; --muted: #a1a1a6; --accent: #5be49b; --blue: #7cc4ff;
-      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    :root { --paper: #F2F0EA; --ink: #151513; --ink-2: #3B3A36; --ink-3: #66635C; --rule: #CDC9BF; --amber: #FFB000;
+      --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      --sans: "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     * { box-sizing: border-box; }
-    html, body { margin: 0; min-height: 100%; }
-    body { background: var(--bg); color: var(--text); font-family: var(--font); -webkit-font-smoothing: antialiased;
-      display: grid; place-items: center; min-height: 100vh; padding: 48px 16px; text-align: center; }
-    .line { font-family: var(--mono); font-size: clamp(14px, 2.4vw, 18px); color: var(--muted); margin: 0 0 28px; }
-    .line b { color: var(--accent); font-weight: 400; }
-    .cursor { display: inline-block; width: 0.6em; height: 1.1em; vertical-align: -0.2em; background: var(--accent); animation: blink 1.05s steps(1) infinite; }
+    html, body { margin: 0; }
+    body { background: var(--paper); color: var(--ink); font: 400 17px/1.6 var(--sans); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+    .wrap { max-width: 1440px; margin: 0 auto; padding: 0 48px; }
+    @media (max-width: 640px) { .wrap { padding: 0 16px; } .mid { display: none; } }
+    .manhead { display: flex; justify-content: space-between; gap: 16px; font: 400 12px var(--mono); padding: 18px 0 12px; border-bottom: 1px solid var(--ink); }
+    main { padding: 12vh 0 96px; max-width: 72ch; }
+    .lbl { font: 600 14px var(--mono); letter-spacing: 0.08em; margin: 0 0 14px; }
+    pre { font: 400 clamp(14px, 1.8vw, 18px)/1.7 var(--mono); margin: 0 0 48px; white-space: pre-wrap; word-break: break-all; }
+    .p { color: #8A5A00; }
+    .cursor { display: inline-block; width: 0.6em; height: 1.1em; vertical-align: -0.2em; background: var(--amber); animation: blink 1.06s steps(1) infinite; }
     @keyframes blink { 50% { opacity: 0; } }
-    h1 { font-size: clamp(44px, 9vw, 96px); letter-spacing: -0.045em; line-height: 1; margin: 0 0 18px;
-      background: linear-gradient(180deg, #fff 20%, #9a9aa0 120%); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    p { color: var(--muted); font-size: clamp(18px, 2vw, 21px); margin: 0 auto; max-width: 30ch; line-height: 1.45; }
-    a.btn { display: inline-flex; align-items: center; min-height: 46px; margin-top: 36px; padding: 12px 24px; border-radius: 999px;
-      background: var(--text); color: #000; text-decoration: none; font-weight: 500; font-size: 17px; }
-    a.btn:hover { background: #fff; }
-    a:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
-    @media (prefers-reduced-motion: reduce) { .cursor { animation: none; } }
+    dl { margin: 0 0 40px; border-top: 1px solid var(--ink); }
+    dl div { display: grid; grid-template-columns: 6ch 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+    dt { font: 600 14px/1.6 var(--mono); }
+    dd { margin: 0; color: var(--ink-2); }
+    a.btn { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 18px; font: 500 14px var(--mono);
+      color: var(--paper); background: var(--ink); border: 1px solid var(--ink); text-decoration: none; transition: background-color .15s, color .15s; }
+    a.btn:hover { background: var(--paper); color: var(--ink); }
+    a:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; box-shadow: 0 0 0 2px var(--ink); }
+    ::selection { background: var(--amber); color: var(--ink); }
+    @media (prefers-reduced-motion: reduce) { .cursor { animation: none; } a.btn { transition: none; } }
   </style>
 </head>
 <body>
-  <main>
-    <p class="line" aria-hidden="true"><b>t1 ~ ❯</b> cd <span id="path">/missing</span><br>cd: no such file or directory <span class="cursor"></span></p>
-    <h1>Not found.</h1>
-    <p>That page isn’t here. The rest of Terminal 1 is.</p>
-    <a class="btn" id="home" href="/">Back to Terminal 1</a>
-  </main>
+  <div class="wrap">
+    <div class="manhead" aria-hidden="true"><span>TERMINAL-1(1)</span><span class="mid">Terminal 1 Manual</span><span>TERMINAL-1(1)</span></div>
+    <main>
+      <h1 class="lbl">EXIT STATUS 1</h1>
+      <pre><span class="p">t1 ~ $</span> open <span id="path-a">/missing</span>
+terminal-1: no such file or directory: <span id="path-b">/missing</span>
+<span class="p">t1 ~ $</span> <span class="cursor" aria-hidden="true"></span></pre>
+      <dl>
+        <div><dt>1</dt><dd>The page is not here. It may have moved, or it never existed. The manual is still in one piece.</dd></div>
+      </dl>
+      <a class="btn" id="home" href="/">cd ~ <span aria-hidden="true">→</span> Terminal 1</a>
+    </main>
+  </div>
   <script>
     (function () {
       // Works both at a project-pages path (/terminal-1/...) and at a domain root.
       var first = location.pathname.split('/')[1];
       var base = location.hostname.endsWith('github.io') && first ? '/' + first + '/' : '/';
       document.getElementById('home').href = base;
-      var p = location.pathname.length > 40 ? location.pathname.slice(0, 40) + '…' : location.pathname;
-      document.getElementById('path').textContent = p;
+      var p = location.pathname.length > 48 ? location.pathname.slice(0, 48) + '…' : location.pathname;
+      document.getElementById('path-a').textContent = p;
+      document.getElementById('path-b').textContent = p;
+      // Same self-hosted fonts as the site, resolved from the site root.
+      var f = function (fam, w, file) { return '@font-face{font-family:"' + fam + '";font-weight:' + w + ';font-style:normal;font-display:swap;src:url(' + base + 'assets/fonts/' + file + ') format("woff2")}'; };
+      var s = document.createElement('style');
+      s.textContent = f('IBM Plex Mono', 400, 'ibm-plex-mono-latin-400-normal.woff2') + f('IBM Plex Mono', 500, 'ibm-plex-mono-latin-500-normal.woff2') +
+        f('IBM Plex Mono', 600, 'ibm-plex-mono-latin-600-normal.woff2') + f('IBM Plex Sans', 400, 'ibm-plex-sans-latin-400-normal.woff2');
+      document.head.appendChild(s);
     })();
   </script>
 </body>
