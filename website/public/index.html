@@ -28,6 +28,7 @@
   <link rel="stylesheet" href="assets/css/site.css">
   <link rel="preload" as="image" href="assets/images/front-three-quarter-896.webp" type="image/webp" imagesrcset="assets/images/front-three-quarter-480.webp 480w, assets/images/front-three-quarter-896.webp 896w" imagesizes="(max-width: 900px) 92vw, 540px">
   <script src="assets/js/site.js" defer></script>
+  <noscript><style>.model-stage .model-fallback { display: grid; } .model-stage .model-note, .model-stage model-viewer { display: none; }</style></noscript>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -274,12 +275,12 @@
           <p class="lede">Unlike the renders, this one is real.</p>
           <p class="prose">The Onshape assembly, exported as glTF. FeatureScript builds it from the same numbers as the circuit boards, so if the CAD fits, the boards fit. Drag to turn it over.</p>
 
-          <div class="model-stage" id="model-stage" data-state="fallback" data-src="assets/models/terminal-1.glb">
+          <div class="model-stage" id="model-stage" data-state="loading" data-src="assets/models/terminal-1.glb">
             <div class="model-fallback">
               <picture>
                 <source type="image/webp" srcset="assets/images/front-three-quarter-896.webp">
                 <img src="assets/images/front-three-quarter-896.jpg" width="896" height="1200" loading="lazy"
-                     alt="Concept render of Terminal 1, shown until the 3D model loads.">
+                     alt="Concept render of Terminal 1, shown because the 3D model could not be loaded.">
               </picture>
             </div>
             <model-viewer id="model-viewer"
@@ -294,7 +295,7 @@
             <div class="model-toolbar" id="model-toolbar" hidden>
               <button class="btn btn--sm" type="button" id="explode-btn" aria-pressed="false" hidden>Exploded view</button>
             </div>
-            <p class="model-note" id="model-note" role="status"><span class="cursor" aria-hidden="true"></span><span id="model-note-text">3D model coming with the first CAD export</span></p>
+            <p class="model-note" id="model-note" role="status"><span class="cursor" aria-hidden="true"></span><span id="model-note-text">loading terminal-1.glb</span></p>
             <dl class="titleblock" aria-label="Drawing details">
               <div><dt>Title</dt><dd>Terminal 1, assembly</dd></div>
               <div><dt>Source</dt><dd>Onshape FeatureScript</dd></div>

@@ -308,13 +308,15 @@
       fetch(src, { method: 'HEAD', cache: 'no-store' }).then(function (r) {
         var type = r.headers.get('content-type') || '';
         if (!r.ok || type.indexOf('text/html') !== -1) throw new Error('no model');
-        setState('loading', 'Loading the 3D model…');
+        setState('loading', 'loading terminal-1.glb');
         return loadScript();
       }).then(function () {
         if (reduceMotion) mv.removeAttribute('auto-rotate');
         mv.addEventListener('load', function () {
           finishMaterials(mv);
-          setState('ready');
+          // Reveal only after the corrected materials have been drawn (two frames), so the first frames in Onshape's
+          // washed-out export colours are never seen.
+          requestAnimationFrame(function () { requestAnimationFrame(function () { setState('ready'); }); });
           var anims = mv.availableAnimations || [];
           if (!anims.length) offerExplodedFile();
           if (anims.length) {
@@ -332,6 +334,10 @@
             });
           }
         }, { once: true });
+        mv.addEventListener('progress', function (e) {
+          var p = e.detail && e.detail.totalProgress;
+          if (typeof p === 'number' && p < 1) noteText.textContent = 'loading terminal-1.glb  ' + Math.round(p * 100) + '%';
+        });
         mv.addEventListener('error', fallback, { once: true });
         mv.src = src;
       }).catch(fallback);
