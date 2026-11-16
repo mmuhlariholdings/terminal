@@ -295,15 +295,38 @@ def jlc_files():
     return build_jlc_files.main()
 
 
-ROUTER_PASSES = 12          # Freerouting passes; it writes its best (possibly incomplete) result after the last one
-ROUTER_TIMEOUT = 1800       # seconds (the shared default of 900 s is too short for this board: about 50 s per pass)
+ROUTER_PASSES = 20          # Freerouting gives up after this many passes and writes its best (possibly incomplete) result
+ROUTER_TIMEOUT = 3600       # seconds; one pass takes about 50 s on this board
+
+
+def route(dsn_path, ses_path):
+    """Freerouting 2.0.1 with a pass limit. Its "-mp" option does not stop the batch router in 2.0.1 (seen on this board:
+    45 passes with -mp 12); the limit that works is "router.max_passes" in its settings file, which lives in its user-data
+    folder under the Java temporary directory. This run gets a private temporary directory with its own settings file, so the
+    shared tools/pcbgen.py and the user's own Freerouting settings are left alone."""
+    import subprocess
+    import tempfile
+    data = os.path.join(tempfile.gettempdir(), "terminal-1-keyboard-board-freerouting")
+    os.makedirs(os.path.join(data, "freerouting"), exist_ok=True)
+    with open(os.path.join(data, "freerouting", "freerouting.json"), "w") as fh:
+        json.dump({"gui": {"enabled": False}, "router": {"max_passes": ROUTER_PASSES, "max_threads": 1},
+                   "usage_and_diagnostic_data": {"disable_analytics": True}, "version": "2.0.1"}, fh)
+    if os.path.exists(ses_path):
+        os.remove(ses_path)
+    log_path = dsn_path[:-len(".dsn")] + "-freerouting.log"
+    with open(log_path, "w") as log:
+        subprocess.run(["java", f"-Djava.io.tmpdir={data}", "-jar", pcbgen.FREEROUTING, "-de", dsn_path, "-do", ses_path,
+                        "-mp", str(ROUTER_PASSES), "-mt", "1", "--gui.enabled=false"],
+                       stdout=log, stderr=subprocess.STDOUT, timeout=ROUTER_TIMEOUT)
+    ok = os.path.exists(ses_path) and os.path.getsize(ses_path) > 0
+    return ok, open(log_path).read()[-1500:]
 
 
 if __name__ == "__main__":
     if "--all" in sys.argv:
         pcbgen.main(build, sch, HERE, [])                       # place, save, write the DSN
         project = os.path.join(HERE, sch.project)
-        ok, log = pcbgen.route(project + ".dsn", project + ".ses", passes=ROUTER_PASSES, timeout=ROUTER_TIMEOUT, tries=1)
+        ok, log = route(project + ".dsn", project + ".ses")
         print("routed:", ok)
         if not ok:
             print(log)

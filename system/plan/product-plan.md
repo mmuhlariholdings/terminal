@@ -266,7 +266,7 @@ run on hardware; website. Keyboard board schematic and layout still to do. Phase
 - **A second USB-C port**, or keep one port (service mode, record 0006, covers flashing).
 - **USB controller mode on the CM4:** `dtoverlay=dwc2,dr_mode=host` (as in `interfaces.md`) or Raspberry Pi OS's default
   `otg_mode=1`. Decide on the bench in Phase 0.
-- **Licences** (record 0007, proposed) and the **GitHub organisation and repository name** (assumed `mmuhlariholdings/terminal-1`).
+- **Licences** (record 0007, proposed) and the **GitHub organisation and repository name** (assumed `mmuhlariholdings/terminal`).
 - **Name.** Terminal 1 is the working name.
 
 ## Changelog

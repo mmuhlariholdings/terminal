@@ -3,7 +3,7 @@
   'use strict';
 
   // The one place the repository URL lives. Every [data-repo] link is built from it.
-  var REPO_URL = 'https://github.com/mmuhlariholdings/terminal-1';
+  var REPO_URL = 'https://github.com/mmuhlariholdings/terminal';
 
   var MODEL_VIEWER_URL = 'https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js';
 

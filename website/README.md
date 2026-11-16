@@ -32,7 +32,7 @@ Then open <http://localhost:8000>. Use a server rather than opening the file dir
   `data-repo="…"` in the HTML is built from it (the attribute value is the path appended to the URL). Without
   JavaScript those links fall back to the in-page FILES section.
 - **Site URL.** `canonical`, `og:url` and `og:image` in `index.html` assume
-  `https://mmuhlariholdings.github.io/terminal-1/`. Change them if the repo name or a custom domain changes.
+  `https://mmuhlariholdings.github.io/terminal/`. Change them if the repo name or a custom domain changes.
 - **Honesty rules.** Nothing is built yet. Every figure is an estimate or target, renders are labelled "Concept
   render, AI-generated" in their captions, and the BUGS section (the vibe-coded disclosure) and footer line stay. Update numbers from `system/plan/interfaces.md`, which
   is the project's single source of truth.

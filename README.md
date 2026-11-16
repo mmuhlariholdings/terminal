@@ -7,7 +7,7 @@
 **A pocket Linux terminal with a real keyboard.**
 Square 720 × 720 screen · BlackBerry Q20 keyboard and trackpad · Raspberry Pi CM4 · USB-C · carbon fibre back
 
-[Website](https://mmuhlariholdings.github.io/terminal-1/) · [Product plan](system/plan/product-plan.md) · [3D model (Onshape)](https://cad.onshape.com/documents/8bfe7e43f7d7ec8135f9a829/w/29c38cad0998e4a6472b08e0/e/69201118ddf43601f28283ef) · [Contribute](CONTRIBUTING.md)
+[Website](https://mmuhlariholdings.github.io/terminal/) · [Product plan](system/plan/product-plan.md) · [3D model (Onshape)](https://cad.onshape.com/documents/8bfe7e43f7d7ec8135f9a829/w/29c38cad0998e4a6472b08e0/e/69201118ddf43601f28283ef) · [Contribute](CONTRIBUTING.md)
 
 </div>
 
@@ -98,7 +98,7 @@ Freerouting autorouter), the [Pico SDK](https://github.com/raspberrypi/pico-sdk)
 
 Everyone is welcome: electronics, CAD, firmware, Linux, docs, design, or simply **checking a datasheet against our files**.
 Read [`CONTRIBUTING.md`](CONTRIBUTING.md), pick an issue labelled
-[`good first issue`](https://github.com/mmuhlariholdings/terminal-1/labels/good%20first%20issue), and open a pull request.
+[`good first issue`](https://github.com/mmuhlariholdings/terminal/labels/good%20first%20issue), and open a pull request.
 Please follow the [Code of Conduct](CODE_OF_CONDUCT.md). Security issues: [`SECURITY.md`](SECURITY.md).
 
 ## Standing on shoulders
