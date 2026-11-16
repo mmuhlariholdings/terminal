@@ -1,0 +1,37 @@
+# Terminal 1 kiosk session: cage (Wayland kiosk compositor) running foot, on tty1.
+# Based on the systemd unit in the cage project wiki. The user is set by
+# install.sh in terminal-1-session.service.d/user.conf.
+#
+# Auto-login is deliberate: the LUKS passphrase at boot is the real gate (see
+# linux/security.md), and tmux locks the screen with vlock after 5 minutes idle.
+# Ctrl+Alt+F2 switches to a normal console login (cage is started with -s).
+
+[Unit]
+Description=Terminal 1 session (cage + foot) on tty1
+After=systemd-user-sessions.service plymouth-quit-wait.service dbus.socket systemd-logind.service getty@tty1.service
+Wants=dbus.socket systemd-logind.service
+Conflicts=getty@tty1.service
+ConditionPathExists=/dev/tty1
+
+[Service]
+Type=simple
+# -d: no client-side decorations; -s: allow VT switching to the text console fallback.
+ExecStart=/usr/bin/cage -d -s -- /usr/bin/foot
+Restart=always
+RestartSec=2
+# Placeholder; replaced by the drop-in written by install.sh.
+User=terminal
+PAMName=terminal-1-session
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+StandardInput=tty-fail
+StandardOutput=journal
+StandardError=journal
+UtmpIdentifier=tty1
+UtmpMode=user
+Environment=XDG_SESSION_TYPE=wayland
+
+[Install]
+WantedBy=multi-user.target

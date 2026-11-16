@@ -1,0 +1,2 @@
+NOT FOR ORDER. Written by hardware/carrier-board/electronics/generate_pcb.py (Terminal 1 CM4 carrier, Rev A).
+The DSI1 and USB differential pairs are not routed and DRC is not clean. See routing-notes.md.

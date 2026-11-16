@@ -1,0 +1,14 @@
+name: Idea or proposal
+description: Suggest a feature or a change of direction (big ones become decision records)
+labels: [idea]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why, and what it costs (space, power, money, complexity)

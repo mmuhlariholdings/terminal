@@ -1,0 +1,17 @@
+(version 1)
+(rule "THT ground pads: one spoke is enough (joined on both layers)"
+  (condition "A.Type == 'Pad' && A.NetName == '/GND'")
+  (constraint min_resolved_spokes 1))
+
+(rule "DSI1 pairs: matched within a pair to 0.15 mm (CM4 datasheet 2.8)"
+  (condition "A.hasNetclass('DSI100')")
+  (constraint diff_pair_uncoupled (max 3mm))
+  (constraint skew (max 0.15mm)))
+(rule "USB pair: matched to 0.15 mm (CM4 datasheet 2.4)"
+  (condition "A.hasNetclass('USB90')")
+  (constraint diff_pair_uncoupled (max 3mm))
+  (constraint skew (max 0.15mm)))
+(rule "Neck-down allowed inside the 0.4 mm pitch CM4 connector fields"
+  (condition "A.hasNetclass('DSI100') || A.hasNetclass('USB90') || A.hasNetclass('Power')")
+  (constraint track_width (min 0.1mm) (opt 0.2mm))
+  (constraint clearance (min 0.1mm)))

@@ -1,0 +1,18 @@
+# pi-gen configuration for the Terminal 1 image (arm64 branch of RPi-Distro/pi-gen).
+# The workflow (.github/workflows/linux-image.yml) copies this to pi-gen/config and
+# appends FIRST_USER_PASS. Builds Raspberry Pi OS Lite (stages 0-2) plus our stage.
+IMG_NAME=terminal-1
+PI_GEN_RELEASE="Terminal 1 (unofficial, based on Raspberry Pi OS Lite)"
+RELEASE=trixie
+TARGET_HOSTNAME=terminal-1
+FIRST_USER_NAME=terminal
+DISABLE_FIRST_BOOT_USER_RENAME=1
+# SSH stays off in the published image (it has a known first password). Turn it on
+# after changing the password: sudo systemctl enable --now ssh
+ENABLE_SSH=0
+LOCALE_DEFAULT=en_GB.UTF-8
+KEYBOARD_KEYMAP=us
+KEYBOARD_LAYOUT="English (US)"
+TIMEZONE_DEFAULT=Africa/Johannesburg
+DEPLOY_COMPRESSION=xz
+STAGE_LIST="stage0 stage1 stage2 stage-terminal-1"

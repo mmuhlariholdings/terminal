@@ -1,0 +1,36 @@
+# Terminal 1 settings, from system/plan/interfaces.md section 5.
+# install.sh puts this block, between the terminal-1 markers, at the end of
+# /boot/firmware/config.txt (Bookworm and Trixie) under an [all] filter.
+# Edit system/plan/interfaces.md first, then this file, then re-run install.sh.
+
+# USB 2.0 to the keyboard board (RP2040). On the CM4 IO board this same line turns
+# on the USB-A ports, so the bench keyboard (Pico) works too.
+# NOTE: install.sh comments out the stock `otg_mode=1` line in the [cm4] section,
+# because that selects the other (XHCI) USB controller. Verify on the bench.
+dtoverlay=dwc2,dr_mode=host
+
+# Serial console on GPIO 14/15 (test pads and the inter-board cable).
+enable_uart=1
+
+# Clean power: GPIO17 low from the RP2040 = shut down (sends KEY_POWER),
+# GPIO26 goes high once Linux has halted = safe to cut power.
+dtoverlay=gpio-shutdown,gpio_pin=17,active_low=1,gpio_pull=up
+dtoverlay=gpio-poweroff,gpiopin=26,active_low=0
+
+# Real-time clock PCF85063A on the CSI/DSI I2C bus (as on the CM4 IO board). Verify.
+dtparam=i2c_vc=on
+dtoverlay=i2c-rtc,pcf85063a,i2c_csi_dsi
+
+# External antenna on the U.FL connector (flex antenna behind the radio window).
+# On the bench, comment this out unless an antenna is fitted to the CM4.
+dtparam=ant2
+
+# Display: the panel overlay depends on the 720 x 720 panel chosen. Verify.
+# Bench with the official Raspberry Pi Touch Display 2 on DISP1, for example:
+#   dtoverlay=vc4-kms-dsi-ili9881-7inch
+# Carrier board backlight PWM on GPIO18, only if the carrier drives the backlight:
+#   dtoverlay=pwm,pin=18,func=2
+
+# Faster boot: no rainbow splash, no boot delay.
+disable_splash=1
+boot_delay=0

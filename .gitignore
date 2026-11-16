@@ -1,0 +1,36 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# KiCad: lock files, per-user view settings, backups, caches, autorouter scratch
+*.lck
+*.kicad_prl
+*-backups/
+fp-info-cache
+**/electronics/**/*.dsn
+**/electronics/**/*-freerouting.log
+**/electronics/preview/
+
+# Firmware build output
+firmware/**/build/
+firmware/**/build-*/
+
+# Linux image build output
+linux/image/work/
+linux/image/deploy/
+*.img
+*.img.xz
+
+# Website local scratch
+website/.cache/
+
+# Editors
+.vscode/
+.idea/
+
+# Third-party programs fetched by tools/fetch_tools.sh (too large for git)
+tools/bin/*.jar

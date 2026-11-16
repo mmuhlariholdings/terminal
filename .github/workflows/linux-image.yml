@@ -1,0 +1,88 @@
+# Builds the Terminal 1 Raspberry Pi OS image with pi-gen and attaches it to a GitHub release.
+# Run it by hand: Actions > Linux image > Run workflow.
+#
+# Status: written but NOT yet run. Expect to fix things on the first run.
+# It uses GitHub's arm64 Linux runner (free for public repositories), so pi-gen builds
+# natively without QEMU. Builds take roughly 30-90 minutes.
+
+name: Linux image
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag to create, for example linux-image-2026-11-16"
+        required: true
+      prerelease:
+        description: "Mark the release as a pre-release"
+        type: boolean
+        default: true
+      pi_gen_ref:
+        description: "pi-gen branch, tag or commit (arm64 branch builds 64-bit Raspberry Pi OS)"
+        default: "arm64"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 180
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Check the scripts and run the status daemon tests
+        run: |
+          bash -n linux/install.sh
+          shellcheck linux/install.sh linux/bin/terminal-1-session || echo "shellcheck not available or found issues"
+          python3 -m unittest discover -s linux/status-daemon/tests -v
+
+      - name: Get pi-gen
+        run: |
+          git clone https://github.com/RPi-Distro/pi-gen.git pi-gen
+          git -C pi-gen checkout "${{ inputs.pi_gen_ref }}"
+          git -C pi-gen log -1 --format='pi-gen %H %s'
+
+      - name: Add the Terminal 1 stage and configuration
+        env:
+          FIRST_USER_PASSWORD: ${{ secrets.IMAGE_FIRST_USER_PASSWORD }}
+        run: |
+          cp -a linux/image/stage-terminal-1 pi-gen/
+          mkdir -p pi-gen/stage-terminal-1/00-install/files
+          rsync -a --exclude image/ linux/ pi-gen/stage-terminal-1/00-install/files/linux/
+          chmod +x pi-gen/stage-terminal-1/prerun.sh pi-gen/stage-terminal-1/00-install/*.sh
+          # Only export our image, not plain Raspberry Pi OS Lite from stage2.
+          touch pi-gen/stage2/SKIP_IMAGES
+          cp linux/image/config pi-gen/config
+          # Repository secret IMAGE_FIRST_USER_PASSWORD, or the documented default.
+          printf 'FIRST_USER_PASS=%q\n' "${FIRST_USER_PASSWORD:-terminal-1}" >> pi-gen/config
+
+      - name: Build the image
+        working-directory: pi-gen
+        run: ./build-docker.sh
+
+      - name: List the output
+        run: ls -la pi-gen/deploy
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.release_tag }}
+          PRERELEASE: ${{ inputs.prerelease }}
+        run: |
+          cat > release-notes.md <<NOTES
+          Terminal 1 image built from commit ${GITHUB_SHA} with pi-gen ($(git -C pi-gen rev-parse --short HEAD)).
+
+          Raspberry Pi OS Lite (64-bit, trixie) plus linux/install.sh. Flash it to the CM4 eMMC with
+          rpiboot and Raspberry Pi Imager (see linux/README.md).
+
+          - User: terminal. Password: the project default (terminal-1) unless the maintainer set a secret.
+            Change it on first boot with passwd. SSH is off until you enable it.
+          - Not encrypted. Follow linux/security.md to add LUKS.
+          - Status: built automatically, not yet tested on hardware unless noted below.
+          NOTES
+          flags=()
+          if [ "$PRERELEASE" = "true" ]; then flags+=(--prerelease); fi
+          gh release create "$TAG" pi-gen/deploy/*.img.xz \
+            --title "Terminal 1 Linux image $TAG" --notes-file release-notes.md "${flags[@]}"

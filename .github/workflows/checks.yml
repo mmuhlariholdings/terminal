@@ -1,0 +1,57 @@
+# Checks: on every pull request and push to main.
+#   - decision records well formed and indexed (tools/check_decisions.py)
+#   - Linux: shell syntax + shellcheck, status daemon unit tests
+#   - boards: each committed schematic matches its generator and passes KiCad ERC (KiCad 10 container);
+#     DRC is reported (and must be clean before a board is ordered, see docs/conventions.md)
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  documents:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decision records
+        run: python3 tools/check_decisions.py
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shell syntax and shellcheck
+        run: |
+          files=$(git ls-files 'linux/*.sh' 'linux/**/*.sh' 'linux/bin/*' 'tools/*.sh')
+          for f in $files; do bash -n "$f"; done
+          shellcheck $files
+      - name: Status daemon tests
+        run: python3 -m unittest discover -s linux/status-daemon/tests -v
+
+  boards:
+    runs-on: ubuntu-latest
+    container:
+      image: kicad/kicad:10.0.8-full
+      options: --user root
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [keyboard-board, carrier-board]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Schematic matches its generator, ERC clean
+        working-directory: hardware/${{ matrix.board }}/electronics
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          python3 generate_schematic.py --erc
+          git diff --exit-code -- '*.kicad_sch' 'netlist.md' || (echo "The committed schematic doesn't match its generator: run generate_schematic.py and commit"; exit 1)
+      - name: DRC report (informational until the board is marked ready to order)
+        working-directory: hardware/${{ matrix.board }}/electronics
+        run: |
+          kicad-cli pcb drc --schematic-parity -o drc-ci.rpt ${{ matrix.board }}.kicad_pcb || true
+          grep -E "violations|unconnected|parity" drc-ci.rpt || cat drc-ci.rpt

@@ -1,0 +1,112 @@
+#!/usr/bin/env python3
+"""terminal-1-ctl: small command-line front end for terminal-1-statusd.
+
+Examples
+  terminal-1-ctl status                  battery, Wi-Fi, firmware version, screen state
+  terminal-1-ctl version                 ask the keyboard board for its firmware version
+  terminal-1-ctl ping                    check that the keyboard board answers
+  terminal-1-ctl keyboard-backlight 40   keyboard backlight, percent (alias: backlight)
+  terminal-1-ctl trackpad mouse          trackpad as a mouse (or: arrows)
+  terminal-1-ctl screen 60               screen brightness, percent, or on / off / toggle
+
+Exit codes: 0 OK, 1 the keyboard board or daemon said ERR, 2 bad usage, 3 daemon not running.
+"""
+
+import argparse
+import os
+import socket
+import sys
+
+DEFAULT_SOCKET = "/run/terminal-1/control.sock"
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(prog="terminal-1-ctl", description="Control the Terminal 1 keyboard board")
+    parser.add_argument("--socket", default=os.environ.get("TERMINAL_1_SOCKET", DEFAULT_SOCKET))
+    parser.add_argument("--timeout", type=float, default=5.0)
+    commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("status", help="show the daemon's view of the device")
+    commands.add_parser("version", help="keyboard firmware version and board revision")
+    commands.add_parser("ping", help="check the keyboard board answers")
+    for name in ("keyboard-backlight", "backlight"):
+        sub = commands.add_parser(name, help="keyboard backlight percent (0-100)")
+        sub.add_argument("percent", type=_percent)
+    sub = commands.add_parser("trackpad", help="trackpad mode")
+    sub.add_argument("mode", choices=("arrows", "mouse"))
+    sub = commands.add_parser("screen", help="screen brightness percent, or on / off / toggle")
+    sub.add_argument("value", type=_screen_value)
+    return parser
+
+
+def _percent(text):
+    try:
+        value = int(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError("expected a number 0-100, got %r" % text)
+    if not 0 <= value <= 100:
+        raise argparse.ArgumentTypeError("expected a number 0-100, got %d" % value)
+    return value
+
+
+def _screen_value(text):
+    if text.lower() in ("on", "off", "toggle"):
+        return text.lower()
+    return str(_percent(text))
+
+
+def to_protocol(arguments):
+    if arguments.command == "status":
+        return "STATUS"
+    if arguments.command == "version":
+        return "VER"
+    if arguments.command == "ping":
+        return "PING"
+    if arguments.command in ("keyboard-backlight", "backlight"):
+        return "BL %d" % arguments.percent
+    if arguments.command == "trackpad":
+        return "MODE %s" % arguments.mode
+    if arguments.command == "screen":
+        return "SCREEN %s" % arguments.value
+    raise ValueError(arguments.command)
+
+
+def send(socket_path, line, timeout):
+    connection = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    connection.settimeout(timeout)
+    try:
+        connection.connect(socket_path)
+        connection.sendall((line + "\n").encode("utf-8"))
+        data = b""
+        while not data.endswith(b"\n"):
+            chunk = connection.recv(4096)
+            if not chunk:
+                break
+            data += chunk
+    finally:
+        connection.close()
+    return data.decode("utf-8", "replace").strip()
+
+
+def main(argv=None):
+    arguments = build_parser().parse_args(argv)
+    try:
+        reply = send(arguments.socket, to_protocol(arguments), arguments.timeout)
+    except (FileNotFoundError, ConnectionRefusedError):
+        print("terminal-1-ctl: daemon not running (no socket at %s)" % arguments.socket, file=sys.stderr)
+        return 3
+    except PermissionError:
+        print("terminal-1-ctl: permission denied on %s (are you in the terminal-1 group?)" % arguments.socket,
+              file=sys.stderr)
+        return 3
+    except socket.timeout:
+        print("terminal-1-ctl: no answer from the daemon", file=sys.stderr)
+        return 3
+    if arguments.command == "status":
+        print(reply.replace("; ", "\n"))
+    else:
+        print(reply)
+    return 1 if reply.startswith("ERR") or not reply else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

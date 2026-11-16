@@ -1,0 +1,15 @@
+Terminal 1 is open hardware, open software and open documentation. Different parts use different licences:
+
+| What | Licence | Full text |
+|---|---|---|
+| Hardware: KiCad schematics and boards, their generator scripts, the Onshape FeatureScript model (hardware/), fabrication files | CERN Open Hardware Licence v2, Strongly Reciprocal (CERN-OHL-S-2.0) | LICENSES/CERN-OHL-S-2.0.txt |
+| Software: firmware (firmware/), Linux setup (linux/), tools (tools/), website code (website/) | MIT | LICENSES/MIT.txt |
+| Documentation and media: plans, decision records, manuals, README files, images (system/, docs/, *.md) | Creative Commons Attribution-ShareAlike 4.0 (CC-BY-SA-4.0) | LICENSES/CC-BY-SA-4.0.txt |
+
+Copyright (c) 2026 The Terminal 1 contributors.
+
+Third-party material keeps its own licence and is credited where it is used (for example the Raspberry Pi CM4 IO board design
+and Solder Party's BBQ20KBD design). "Raspberry Pi" and "BlackBerry" are trademarks of their owners; Terminal 1 is not affiliated
+with or endorsed by them. Why these licences: docs/decisions/0007-open-source-licences.md.
+
+Source location (for CERN-OHL-S section 4): https://github.com/mmuhlariholdings/terminal-1

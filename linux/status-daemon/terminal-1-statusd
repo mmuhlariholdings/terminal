@@ -1,0 +1,873 @@
+#!/usr/bin/env python3
+"""terminal-1-statusd: talks to the Terminal 1 keyboard board over its CDC "status" serial port.
+
+What it does
+- Reads the line protocol from system/plan/interfaces.md section 7 (BAT / PWR / VER / OK / ERR).
+- Writes the state to /run/terminal-1/status (key=value lines) and a one-line,
+  tmux-friendly summary to /run/terminal-1/status.tmux.
+- Runs `systemctl poweroff` once when the keyboard board sends `PWR critical-battery`.
+- Reopens the port whenever it disappears (USB unplugged, RP2040 reset, service mode).
+- Serves a small Unix socket (/run/terminal-1/control.sock) used by `terminal-1-ctl`
+  to send VER / BL / MODE / PING to the keyboard board and to set the screen brightness.
+- Dims and then switches off the screen backlight after a period without input
+  (any /dev/input/event* activity counts), and restores it on the next key press.
+
+Standard library only. If pyserial is installed it is used to open the port;
+otherwise the port is opened and configured with raw termios.
+"""
+
+import argparse
+import collections
+import errno
+import glob
+import logging
+import os
+import selectors
+import shlex
+import signal
+import socket
+import subprocess
+import sys
+import termios
+import threading
+import time
+
+VERSION = "0.1.0"
+
+DEFAULT_PORT = "/dev/terminal-1-status"
+DEFAULT_RUN_DIR = "/run/terminal-1"
+DEFAULT_BACKLIGHT_DIR = "/sys/class/backlight"
+DEFAULT_INPUT_GLOB = "/dev/input/event*"
+DEFAULT_POWEROFF_COMMAND = "systemctl poweroff"
+SOCKET_NAME = "control.sock"
+STATUS_NAME = "status"
+TMUX_NAME = "status.tmux"
+
+BAUD_RATE = 115200
+BATTERY_STATES = ("charging", "discharging", "full", "no-battery")
+POWER_EVENTS = ("button-short", "button-long", "low-battery", "critical-battery")
+LOW_BATTERY_PERCENT = 15
+MAX_LINE_LENGTH = 256
+
+log = logging.getLogger("terminal-1-statusd")
+
+
+class PortClosed(Exception):
+    """The serial port went away (EOF or I/O error)."""
+
+
+# ---------------------------------------------------------------------------
+# Protocol parsing and formatting (pure functions, unit tested)
+# ---------------------------------------------------------------------------
+
+def parse_line(line):
+    """Parse one line from the keyboard board into a dict with a "type" key.
+
+    Unknown or malformed lines come back as type "INVALID" with the raw text,
+    so a newer firmware never crashes an older daemon.
+    """
+    text = line.strip()
+    if not text:
+        return None
+    parts = text.split()
+    kind = parts[0]
+    invalid = {"type": "INVALID", "raw": text}
+    if kind == "BAT":
+        if len(parts) != 4:
+            return invalid
+        try:
+            percent = int(parts[1])
+            millivolts = int(parts[2])
+        except ValueError:
+            return invalid
+        state = parts[3]
+        if not 0 <= percent <= 100 or millivolts < 0 or state not in BATTERY_STATES:
+            return invalid
+        return {"type": "BAT", "percent": percent, "millivolts": millivolts, "state": state}
+    if kind == "PWR":
+        if len(parts) != 2 or parts[1] not in POWER_EVENTS:
+            return invalid
+        return {"type": "PWR", "event": parts[1]}
+    if kind == "VER":
+        if len(parts) < 2:
+            return invalid
+        return {"type": "VER", "firmware": parts[1],
+                "board": parts[2] if len(parts) > 2 else "unknown"}
+    if kind == "OK" and len(parts) == 1:
+        return {"type": "OK"}
+    if kind == "ERR":
+        return {"type": "ERR", "text": text[3:].strip() or "unspecified"}
+    return invalid
+
+
+def validate_command(command):
+    """Check a command line from terminal-1-ctl. Returns (kind, normalised) or raises ValueError.
+
+    kind is "keyboard" (forwarded to the RP2040) or "local" (handled here).
+    """
+    parts = command.strip().split()
+    if not parts:
+        raise ValueError("empty command")
+    name = parts[0].upper()
+    if name in ("VER", "PING") and len(parts) == 1:
+        return "keyboard", name
+    if name == "BL" and len(parts) == 2:
+        value = _parse_percent(parts[1])
+        return "keyboard", "BL %d" % value
+    if name == "MODE" and len(parts) == 2 and parts[1].lower() in ("arrows", "mouse"):
+        return "keyboard", "MODE %s" % parts[1].lower()
+    if name == "STATUS" and len(parts) == 1:
+        return "local", "STATUS"
+    if name == "SCREEN" and len(parts) == 2:
+        argument = parts[1].lower()
+        if argument in ("on", "off", "toggle"):
+            return "local", "SCREEN %s" % argument
+        return "local", "SCREEN %d" % _parse_percent(argument)
+    raise ValueError("unknown or malformed command: %s" % command.strip())
+
+
+def _parse_percent(text):
+    try:
+        value = int(text)
+    except ValueError:
+        raise ValueError("not a number: %s" % text)
+    if not 0 <= value <= 100:
+        raise ValueError("out of range 0-100: %d" % value)
+    return value
+
+
+def format_tmux(state):
+    """One short ASCII line for the tmux status bar (Terminus has few glyphs, so no icons)."""
+    if not state.get("connected"):
+        battery = "kbd --"
+    elif state.get("battery_state") is None:
+        battery = "BAT ?"
+    else:
+        percent = state.get("battery_percent")
+        battery_state = state["battery_state"]
+        if battery_state == "no-battery":
+            battery = "AC"
+        elif battery_state == "charging":
+            battery = "CHG %d%%" % percent
+        elif battery_state == "full":
+            battery = "FULL"
+        elif percent is not None and percent <= LOW_BATTERY_PERCENT:
+            battery = "BAT %d%% LOW" % percent
+        else:
+            battery = "BAT %d%%" % percent
+    if state.get("wifi_ssid") is None:
+        wifi = "wifi --"
+    elif state.get("wifi_signal") is None:
+        wifi = "wifi %s" % state["wifi_ssid"]
+    else:
+        wifi = "wifi %d%% %s" % (state["wifi_signal"], state["wifi_ssid"])
+    if len(wifi) > 28:
+        wifi = wifi[:27] + "~"
+    return "%s | %s" % (battery, wifi)
+
+
+def format_status(state):
+    """key=value lines, easy to read from shell scripts (`. /run/terminal-1/status` is NOT safe; use grep)."""
+    lines = []
+    for key in sorted(state):
+        value = state[key]
+        if value is None:
+            value = ""
+        elif isinstance(value, bool):
+            value = "1" if value else "0"
+        value = str(value).replace("\n", " ")
+        lines.append("%s=%s" % (key, value))
+    return "\n".join(lines) + "\n"
+
+
+def parse_nmcli_wifi(output):
+    """Parse `nmcli -t -f ACTIVE,SIGNAL,SSID device wifi list --rescan no` output.
+
+    Returns (signal_percent, ssid) for the active network, or (None, None).
+    nmcli terse mode escapes ':' and '\\' in values with a backslash.
+    """
+    for line in output.splitlines():
+        fields = _split_terse(line)
+        if len(fields) >= 3 and fields[0] == "yes":
+            try:
+                signal_percent = int(fields[1])
+            except ValueError:
+                signal_percent = None
+            return signal_percent, fields[2]
+    return None, None
+
+
+def _split_terse(line):
+    fields, current, escaped = [], [], False
+    for character in line:
+        if escaped:
+            current.append(character)
+            escaped = False
+        elif character == "\\":
+            escaped = True
+        elif character == ":":
+            fields.append("".join(current))
+            current = []
+        else:
+            current.append(character)
+    fields.append("".join(current))
+    return fields
+
+
+def write_atomic(path, text):
+    directory = os.path.dirname(path) or "."
+    temporary = os.path.join(directory, ".%s.tmp" % os.path.basename(path))
+    with open(temporary, "w") as handle:
+        handle.write(text)
+    os.chmod(temporary, 0o644)
+    os.replace(temporary, path)
+
+
+# ---------------------------------------------------------------------------
+# Serial port
+# ---------------------------------------------------------------------------
+
+class SerialPort:
+    """Non-blocking serial port. Uses pyserial when available, raw termios otherwise."""
+
+    def __init__(self, path, use_pyserial=True):
+        self.path = path
+        self.use_pyserial = use_pyserial
+        self._serial = None
+        self.fd = None
+
+    def open(self):
+        if self.use_pyserial:
+            try:
+                import serial  # noqa: F401  (optional dependency)
+                self._serial = serial.Serial(self.path, BAUD_RATE, timeout=0, write_timeout=1)
+                self.fd = self._serial.fileno()
+                os.set_blocking(self.fd, False)
+                return self
+            except ImportError:
+                pass
+        fd = os.open(self.path, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK)
+        try:
+            attributes = termios.tcgetattr(fd)
+            # Equivalent of cfmakeraw(): no echo, no line editing, no translation, 8N1.
+            attributes[0] &= ~(termios.IGNBRK | termios.BRKINT | termios.PARMRK | termios.ISTRIP
+                               | termios.INLCR | termios.IGNCR | termios.ICRNL | termios.IXON)
+            attributes[1] &= ~termios.OPOST
+            attributes[2] &= ~(termios.CSIZE | termios.PARENB | termios.CSTOPB)
+            attributes[2] |= termios.CS8 | termios.CREAD | termios.CLOCAL
+            attributes[3] &= ~(termios.ECHO | termios.ECHONL | termios.ICANON | termios.ISIG
+                               | termios.IEXTEN)
+            attributes[4] = termios.B115200
+            attributes[5] = termios.B115200
+            attributes[6][termios.VMIN] = 0
+            attributes[6][termios.VTIME] = 0
+            termios.tcsetattr(fd, termios.TCSANOW, attributes)
+            termios.tcflush(fd, termios.TCIFLUSH)
+        except Exception:
+            os.close(fd)
+            raise
+        self.fd = fd
+        return self
+
+    def fileno(self):
+        return self.fd
+
+    def read(self):
+        try:
+            data = os.read(self.fd, 1024)
+        except BlockingIOError:
+            return b""
+        except OSError as error:
+            raise PortClosed(str(error))
+        if not data:
+            raise PortClosed("end of file")
+        return data
+
+    def write_line(self, text):
+        data = (text + "\n").encode("ascii")
+        deadline = time.monotonic() + 1.0
+        while data:
+            try:
+                written = os.write(self.fd, data)
+                data = data[written:]
+            except BlockingIOError:
+                if time.monotonic() > deadline:
+                    raise PortClosed("write timed out")
+                time.sleep(0.01)
+            except OSError as error:
+                raise PortClosed(str(error))
+
+    def close(self):
+        try:
+            if self._serial is not None:
+                self._serial.close()
+            elif self.fd is not None:
+                os.close(self.fd)
+        except OSError:
+            pass
+        self._serial = None
+        self.fd = None
+
+
+# ---------------------------------------------------------------------------
+# Screen backlight
+# ---------------------------------------------------------------------------
+
+class Backlight:
+    """Screen backlight through /sys/class/backlight/<device>/brightness.
+
+    On the bench (official Raspberry Pi DSI display) a backlight device exists. On the
+    Terminal 1 carrier board it depends on the chosen panel; until it exists every call
+    is a no-op and `available` is False.
+    """
+
+    def __init__(self, base_directory):
+        self.device = None
+        candidates = sorted(glob.glob(os.path.join(base_directory, "*")))
+        for candidate in candidates:
+            if os.path.exists(os.path.join(candidate, "brightness")):
+                self.device = candidate
+                break
+        self.maximum = None
+        if self.device is not None:
+            self.maximum = self._read_int("max_brightness") or 255
+
+    @property
+    def available(self):
+        return self.device is not None
+
+    def _read_int(self, name):
+        try:
+            with open(os.path.join(self.device, name)) as handle:
+                return int(handle.read().strip())
+        except (OSError, ValueError):
+            return None
+
+    def get_percent(self):
+        if not self.available:
+            return None
+        raw = self._read_int("brightness")
+        if raw is None:
+            return None
+        return int(round(raw * 100.0 / self.maximum))
+
+    def set_percent(self, percent):
+        if not self.available:
+            return False
+        raw = int(round(self.maximum * max(0, min(100, percent)) / 100.0))
+        try:
+            with open(os.path.join(self.device, "brightness"), "w") as handle:
+                handle.write("%d\n" % raw)
+            return True
+        except OSError as error:
+            log.warning("cannot set backlight: %s", error)
+            return False
+
+
+# ---------------------------------------------------------------------------
+# Daemon
+# ---------------------------------------------------------------------------
+
+class Request:
+    def __init__(self, command, client=None):
+        self.command = command
+        self.client = client
+        self.deadline = None
+
+
+class StatusDaemon:
+    def __init__(self, options):
+        self.options = options
+        self.selector = selectors.DefaultSelector()
+        self.port = None
+        self.receive_buffer = b""
+        self.next_reconnect = 0.0
+        self.queue = collections.deque()
+        self.in_flight = None
+        self.clients = {}
+        self.stopping = False
+        self.poweroff_started = False
+        self.status_dirty = True
+        self.last_status_write = 0.0
+        self.state = {
+            "connected": False,
+            "port": options.port,
+            "battery_percent": None,
+            "battery_millivolts": None,
+            "battery_state": None,
+            "battery_updated": None,
+            "firmware_version": None,
+            "board_revision": None,
+            "last_power_event": None,
+            "last_power_event_time": None,
+            "wifi_ssid": None,
+            "wifi_signal": None,
+            "screen": "on",
+            "daemon_version": VERSION,
+        }
+        self.state_lock = threading.Lock()
+        self.backlight = Backlight(options.backlight_dir)
+        self.screen_level = None          # brightness the user chose (percent)
+        self.screen_mode = "on"           # on | dim | off | manual-off
+        self.last_activity = time.monotonic()
+        self.input_fds = {}               # path -> fd
+        self.next_input_scan = 0.0
+        self.server = None
+
+    # -- setup -------------------------------------------------------------
+
+    def setup(self):
+        os.makedirs(self.options.run_dir, exist_ok=True)
+        path = os.path.join(self.options.run_dir, SOCKET_NAME)
+        try:
+            os.unlink(path)
+        except FileNotFoundError:
+            pass
+        self.server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.server.bind(path)
+        os.chmod(path, 0o660)
+        if self.options.socket_group:
+            try:
+                import grp
+                os.chown(path, -1, grp.getgrnam(self.options.socket_group).gr_gid)
+            except (KeyError, PermissionError) as error:
+                log.warning("cannot give socket to group %s: %s", self.options.socket_group, error)
+        self.server.listen(8)
+        self.server.setblocking(False)
+        self.selector.register(self.server, selectors.EVENT_READ, ("server", None))
+        if self.backlight.available:
+            self.screen_level = self.backlight.get_percent() or 100
+            log.info("screen backlight: %s", self.backlight.device)
+        else:
+            log.info("no screen backlight device under %s; dimming disabled", self.options.backlight_dir)
+        if not self.options.no_wifi:
+            thread = threading.Thread(target=self._wifi_loop, daemon=True)
+            thread.start()
+        self.write_status(force=True)
+
+    # -- main loop ---------------------------------------------------------
+
+    def run(self):
+        self.setup()
+        log.info("terminal-1-statusd %s watching %s", VERSION, self.options.port)
+        while not self.stopping:
+            now = time.monotonic()
+            if self.port is None and now >= self.next_reconnect:
+                self.try_open_port()
+            if self.options.input_glob and now >= self.next_input_scan:
+                self.scan_inputs()
+                self.next_input_scan = now + 10.0
+            for key, _ in self.selector.select(timeout=0.25):
+                kind, data = key.data
+                if kind == "server":
+                    self.accept_client()
+                elif kind == "client":
+                    self.read_client(key.fileobj)
+                elif kind == "port":
+                    self.read_port()
+                elif kind == "input":
+                    self.read_input(data)
+            self.check_in_flight()
+            self.check_idle()
+            self.write_status()
+        self.shutdown()
+
+    def stop(self, *_):
+        self.stopping = True
+
+    def shutdown(self):
+        self.close_port("daemon stopping")
+        for path in list(self.input_fds):
+            self.close_input(path)
+        if self.server is not None:
+            self.server.close()
+            try:
+                os.unlink(os.path.join(self.options.run_dir, SOCKET_NAME))
+            except OSError:
+                pass
+
+    # -- serial port -------------------------------------------------------
+
+    def try_open_port(self):
+        self.next_reconnect = time.monotonic() + self.options.reconnect_seconds
+        if not os.path.exists(self.options.port):
+            return
+        try:
+            self.port = SerialPort(self.options.port, not self.options.no_pyserial).open()
+        except OSError as error:
+            log.debug("cannot open %s: %s", self.options.port, error)
+            self.port = None
+            return
+        self.receive_buffer = b""
+        self.selector.register(self.port.fileno(), selectors.EVENT_READ, ("port", None))
+        with self.state_lock:
+            self.state["connected"] = True
+        self.status_dirty = True
+        log.info("connected to %s", self.options.port)
+        self.queue.appendleft(Request("VER"))
+        self.send_next()
+
+    def close_port(self, reason):
+        if self.port is None:
+            return
+        log.info("keyboard port closed: %s", reason)
+        try:
+            self.selector.unregister(self.port.fileno())
+        except (KeyError, ValueError):
+            pass
+        self.port.close()
+        self.port = None
+        with self.state_lock:
+            self.state["connected"] = False
+        self.status_dirty = True
+        failed = [self.in_flight] if self.in_flight else []
+        failed.extend(self.queue)
+        self.in_flight = None
+        self.queue.clear()
+        for request in failed:
+            self.reply(request, "ERR keyboard disconnected")
+        self.next_reconnect = time.monotonic() + self.options.reconnect_seconds
+
+    def read_port(self):
+        try:
+            data = self.port.read()
+        except PortClosed as error:
+            self.close_port(str(error))
+            return
+        self.receive_buffer += data
+        while b"\n" in self.receive_buffer:
+            raw, self.receive_buffer = self.receive_buffer.split(b"\n", 1)
+            self.handle_line(raw.decode("ascii", "replace").strip("\r"))
+        if len(self.receive_buffer) > MAX_LINE_LENGTH:
+            log.warning("dropping %d bytes without a newline", len(self.receive_buffer))
+            self.receive_buffer = b""
+
+    def handle_line(self, line):
+        message = parse_line(line)
+        if message is None:
+            return
+        kind = message["type"]
+        log.debug("keyboard: %s", line)
+        if kind == "BAT":
+            with self.state_lock:
+                self.state["battery_percent"] = message["percent"]
+                self.state["battery_millivolts"] = message["millivolts"]
+                self.state["battery_state"] = message["state"]
+                self.state["battery_updated"] = int(time.time())
+            self.status_dirty = True
+        elif kind == "PWR":
+            self.handle_power_event(message["event"])
+        elif kind in ("OK", "ERR", "VER"):
+            if kind == "VER":
+                with self.state_lock:
+                    self.state["firmware_version"] = message["firmware"]
+                    self.state["board_revision"] = message["board"]
+                self.status_dirty = True
+            if self.in_flight is not None:
+                request, self.in_flight = self.in_flight, None
+                self.reply(request, line.strip())
+                self.send_next()
+            else:
+                log.debug("unsolicited reply: %s", line)
+        else:
+            log.warning("unrecognised line from keyboard: %r", message.get("raw"))
+
+    def handle_power_event(self, event):
+        with self.state_lock:
+            self.state["last_power_event"] = event
+            self.state["last_power_event_time"] = int(time.time())
+        self.status_dirty = True
+        log.info("power event: %s", event)
+        if event == "critical-battery":
+            self.write_status(force=True)
+            self.power_off()
+        elif event == "button-short":
+            # Proposal (not yet agreed with the firmware): a short press toggles the screen,
+            # the nearest thing to "sleep" a CM4 has. A long press sends the HID
+            # System Power Down key, which systemd-logind turns into a clean poweroff.
+            self.set_screen("toggle")
+
+    def power_off(self):
+        if self.poweroff_started:
+            return
+        self.poweroff_started = True
+        log.warning("critical battery: running %s", self.options.poweroff_command)
+        try:
+            subprocess.Popen(shlex.split(self.options.poweroff_command))
+        except OSError as error:
+            log.error("poweroff command failed: %s", error)
+
+    # -- commands ----------------------------------------------------------
+
+    def send_next(self):
+        if self.in_flight is not None or not self.queue or self.port is None:
+            return
+        request = self.queue.popleft()
+        try:
+            self.port.write_line(request.command)
+        except PortClosed as error:
+            self.queue.appendleft(request)
+            self.close_port(str(error))
+            return
+        request.deadline = time.monotonic() + self.options.reply_timeout
+        self.in_flight = request
+
+    def check_in_flight(self):
+        if self.in_flight is not None and time.monotonic() > self.in_flight.deadline:
+            request, self.in_flight = self.in_flight, None
+            log.warning("no reply to %s", request.command)
+            self.reply(request, "ERR timeout")
+            self.send_next()
+
+    def reply(self, request, text):
+        if request.client is None:
+            return
+        try:
+            request.client.setblocking(True)
+            request.client.settimeout(1.0)
+            request.client.sendall((text + "\n").encode("utf-8"))
+        except OSError:
+            pass
+        self.drop_client(request.client)
+
+    # -- control socket ----------------------------------------------------
+
+    def accept_client(self):
+        try:
+            connection, _ = self.server.accept()
+        except BlockingIOError:
+            return
+        connection.setblocking(False)
+        self.clients[connection] = b""
+        self.selector.register(connection, selectors.EVENT_READ, ("client", None))
+
+    def drop_client(self, connection):
+        if connection in self.clients:
+            del self.clients[connection]
+            try:
+                self.selector.unregister(connection)
+            except (KeyError, ValueError):
+                pass
+        try:
+            connection.close()
+        except OSError:
+            pass
+
+    def read_client(self, connection):
+        try:
+            data = connection.recv(512)
+        except BlockingIOError:
+            return
+        except OSError:
+            data = b""
+        if not data:
+            self.drop_client(connection)
+            return
+        buffer = self.clients.get(connection, b"") + data
+        if b"\n" not in buffer:
+            if len(buffer) > 512:
+                self.drop_client(connection)
+            else:
+                self.clients[connection] = buffer
+            return
+        line = buffer.split(b"\n", 1)[0].decode("utf-8", "replace")
+        # Stop reading from this client; it gets exactly one reply.
+        try:
+            self.selector.unregister(connection)
+        except (KeyError, ValueError):
+            pass
+        request = Request(None, connection)
+        try:
+            kind, command = validate_command(line)
+        except ValueError as error:
+            self.reply(request, "ERR %s" % error)
+            return
+        if kind == "local":
+            self.reply(request, self.handle_local(command))
+            return
+        if self.port is None:
+            self.reply(request, "ERR keyboard not connected")
+            return
+        request.command = command
+        self.queue.append(request)
+        self.send_next()
+
+    def handle_local(self, command):
+        if command == "STATUS":
+            with self.state_lock:
+                return format_status(self.state).strip().replace("\n", "; ")
+        argument = command.split()[1]
+        if not self.backlight.available:
+            return "ERR no screen backlight device"
+        self.set_screen(argument)
+        return "OK"
+
+    # -- screen and idle ---------------------------------------------------
+
+    def set_screen(self, argument):
+        if not self.backlight.available:
+            return
+        if argument == "toggle":
+            argument = "on" if self.screen_mode in ("off", "manual-off") else "off"
+        if argument == "off":
+            self.backlight.set_percent(0)
+            self.screen_mode = "manual-off"
+        elif argument == "on":
+            self.backlight.set_percent(self.screen_level or 100)
+            self.screen_mode = "on"
+            self.last_activity = time.monotonic()
+        else:
+            self.screen_level = max(5, int(argument))
+            self.backlight.set_percent(self.screen_level)
+            self.screen_mode = "on"
+            self.last_activity = time.monotonic()
+        with self.state_lock:
+            self.state["screen"] = self.screen_mode
+        self.status_dirty = True
+
+    def check_idle(self):
+        if not self.backlight.available or self.screen_mode == "manual-off":
+            return
+        idle = time.monotonic() - self.last_activity
+        dim_after, off_after = self.options.idle_dim_seconds, self.options.idle_off_seconds
+        if off_after and idle >= off_after and self.screen_mode != "off":
+            self.backlight.set_percent(0)
+            self._set_mode("off")
+        elif dim_after and dim_after <= idle and self.screen_mode == "on":
+            self.backlight.set_percent(min(self.options.dim_percent, self.screen_level or 100))
+            self._set_mode("dim")
+
+    def _set_mode(self, mode):
+        self.screen_mode = mode
+        with self.state_lock:
+            self.state["screen"] = mode
+        self.status_dirty = True
+
+    def activity(self):
+        self.last_activity = time.monotonic()
+        if self.screen_mode in ("dim", "off", "manual-off") and self.backlight.available:
+            self.backlight.set_percent(self.screen_level or 100)
+            self._set_mode("on")
+
+    def scan_inputs(self):
+        for path in glob.glob(self.options.input_glob):
+            if path in self.input_fds:
+                continue
+            try:
+                fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+            except OSError:
+                continue
+            self.input_fds[path] = fd
+            self.selector.register(fd, selectors.EVENT_READ, ("input", path))
+
+    def close_input(self, path):
+        fd = self.input_fds.pop(path, None)
+        if fd is None:
+            return
+        try:
+            self.selector.unregister(fd)
+        except (KeyError, ValueError):
+            pass
+        os.close(fd)
+
+    def read_input(self, path):
+        fd = self.input_fds.get(path)
+        if fd is None:
+            return
+        try:
+            data = os.read(fd, 4096)
+        except BlockingIOError:
+            return
+        except OSError:
+            self.close_input(path)
+            return
+        if not data:
+            self.close_input(path)
+            return
+        self.activity()
+
+    # -- Wi-Fi (background thread, so a slow nmcli never blocks the serial port) --
+
+    def _wifi_loop(self):
+        while not self.stopping:
+            signal_percent, ssid = read_wifi()
+            with self.state_lock:
+                changed = (self.state["wifi_signal"], self.state["wifi_ssid"]) != (signal_percent, ssid)
+                self.state["wifi_signal"], self.state["wifi_ssid"] = signal_percent, ssid
+            if changed:
+                self.status_dirty = True
+            time.sleep(self.options.wifi_seconds)
+
+    # -- status files ------------------------------------------------------
+
+    def write_status(self, force=False):
+        now = time.monotonic()
+        if not (force or self.status_dirty or now - self.last_status_write > 30):
+            return
+        with self.state_lock:
+            snapshot = dict(self.state)
+        snapshot["updated"] = int(time.time())
+        try:
+            write_atomic(os.path.join(self.options.run_dir, STATUS_NAME), format_status(snapshot))
+            write_atomic(os.path.join(self.options.run_dir, TMUX_NAME), format_tmux(snapshot) + "\n")
+        except OSError as error:
+            log.error("cannot write status: %s", error)
+            return
+        self.status_dirty = False
+        self.last_status_write = now
+
+
+def read_wifi():
+    try:
+        result = subprocess.run(
+            ["nmcli", "-t", "-f", "ACTIVE,SIGNAL,SSID", "device", "wifi", "list", "--rescan", "no"],
+            capture_output=True, text=True, timeout=5)
+        if result.returncode == 0:
+            return parse_nmcli_wifi(result.stdout)
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return None, None
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(description="Terminal 1 keyboard status daemon")
+    parser.add_argument("--port", default=os.environ.get("TERMINAL_1_PORT", DEFAULT_PORT),
+                        help="CDC status port (default %(default)s, a udev symlink)")
+    parser.add_argument("--run-dir", default=DEFAULT_RUN_DIR, help="where status files and the socket live")
+    parser.add_argument("--socket-group", default=None, help="group allowed to use terminal-1-ctl")
+    parser.add_argument("--poweroff-command", default=DEFAULT_POWEROFF_COMMAND)
+    parser.add_argument("--reply-timeout", type=float, default=2.0, help="seconds to wait for OK/ERR/VER")
+    parser.add_argument("--reconnect-seconds", type=float, default=2.0)
+    parser.add_argument("--backlight-dir", default=DEFAULT_BACKLIGHT_DIR)
+    parser.add_argument("--input-glob", default=DEFAULT_INPUT_GLOB,
+                        help="input devices watched for idle dimming; empty string disables")
+    parser.add_argument("--idle-dim-seconds", type=float, default=60.0, help="0 disables")
+    parser.add_argument("--idle-off-seconds", type=float, default=180.0, help="0 disables")
+    parser.add_argument("--dim-percent", type=int, default=10)
+    parser.add_argument("--wifi-seconds", type=float, default=15.0)
+    parser.add_argument("--no-wifi", action="store_true", help="do not poll nmcli")
+    parser.add_argument("--no-pyserial", action="store_true", help="always use raw termios")
+    parser.add_argument("--verbose", action="store_true")
+    parser.add_argument("--version", action="version", version=VERSION)
+    return parser
+
+
+def main(argv=None):
+    options = build_parser().parse_args(argv)
+    logging.basicConfig(level=logging.DEBUG if options.verbose else logging.INFO,
+                        format="%(levelname)s %(message)s", stream=sys.stderr)
+    daemon = StatusDaemon(options)
+    signal.signal(signal.SIGTERM, daemon.stop)
+    signal.signal(signal.SIGINT, daemon.stop)
+    try:
+        daemon.run()
+    except OSError as error:
+        if error.errno == errno.EACCES:
+            log.error("permission denied: %s (run as root, or pass --run-dir)", error)
+            return 1
+        raise
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

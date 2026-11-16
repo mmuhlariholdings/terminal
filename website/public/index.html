@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Terminal 1 — the open-source pocket terminal</title>
+  <meta name="description" content="Terminal 1 is an open-source pocket Linux terminal: a square 4-inch screen, a real BlackBerry Q20 keyboard with trackpad and a Raspberry Pi CM4. Built for SSH, az login and Claude Code on the go. Designed in the open; prototype in progress.">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="dark">
+  <link rel="canonical" href="https://mmuhlariholdings.github.io/terminal-1/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Terminal 1">
+  <meta property="og:title" content="Terminal 1 — the shell, pocket-sized">
+  <meta property="og:description" content="An open-source pocket Linux terminal with a square screen and a real keyboard. Designed in the open, vibe coded with Claude Code. Prototype in progress.">
+  <meta property="og:url" content="https://mmuhlariholdings.github.io/terminal-1/">
+  <meta property="og:image" content="https://mmuhlariholdings.github.io/terminal-1/assets/images/og-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Terminal 1 concept render: a black pocket terminal with a square screen above a hardware keyboard.">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/images/apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&family=JetBrains+Mono:wght@400;600&display=swap">
+  <link rel="stylesheet" href="assets/css/site.css">
+  <link rel="preload" as="image" href="assets/images/front-three-quarter-896.webp" type="image/webp" imagesrcset="assets/images/front-three-quarter-480.webp 480w, assets/images/front-three-quarter-896.webp 896w" imagesizes="(max-width: 660px) 92vw, 620px">
+
+  <script>
+    // Enable motion classes before first paint so revealed content never flashes.
+    (function () {
+      var d = document.documentElement;
+      d.classList.add('js');
+      if (!window.matchMedia || !window.matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('js-motion');
+      else d.classList.add('no-motion');
+    })();
+  </script>
+  <script src="assets/js/site.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="nav" id="top">
+    <div class="wrap nav__inner">
+      <a class="brand" href="#top" aria-label="Terminal 1, back to top">
+        <img class="brand__mark" src="assets/images/favicon.svg" alt="" width="24" height="24">
+        Terminal 1
+      </a>
+      <nav aria-label="Sections">
+        <div class="nav__links" id="nav-links">
+          <a href="#screen">Screen</a>
+          <a href="#keyboard">Keyboard</a>
+          <a href="#inside">Inside</a>
+          <a href="#model">3D model</a>
+          <a href="#specs">Specs</a>
+          <a href="#roadmap">Roadmap</a>
+          <a href="#open-source">Open source</a>
+        </div>
+      </nav>
+      <div class="nav__cta">
+        <a class="btn btn--primary" href="#open-source" data-repo="">GitHub</a>
+        <button class="nav__menu-btn" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Menu"><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="wrap">
+        <a class="status-pill" href="#roadmap"><span class="dot" aria-hidden="true"></span>Prototype in progress · Phase 0</a>
+        <p class="hero__name">Terminal 1</p>
+        <h1 id="hero-title" class="display grad">The shell,<br>pocket&#8209;sized.</h1>
+        <p class="lead">A square screen. A real keyboard. Linux, and nothing else. An open-source pocket terminal for SSH, <span class="mono">az login</span> and Claude Code — wherever you are.</p>
+        <div class="btn-row">
+          <a class="btn btn--primary" href="#open-source" data-repo="">Follow the build on GitHub</a>
+          <a class="btn btn--ghost" href="#model">Explore the 3D model</a>
+        </div>
+
+        <figure class="hero__media">
+          <picture>
+            <source type="image/webp" srcset="assets/images/front-three-quarter-480.webp 480w, assets/images/front-three-quarter-896.webp 896w" sizes="(max-width: 660px) 92vw, 620px">
+            <img src="assets/images/front-three-quarter-896.jpg" width="896" height="1200" fetchpriority="high"
+                 alt="Concept render of Terminal 1 from the front: a black handheld with a square screen showing a Linux shell above a full hardware keyboard.">
+          </picture>
+          <figcaption class="caption">Concept render. AI-generated; the real device is not built yet.</figcaption>
+        </figure>
+
+        <ul class="facts" aria-label="At a glance">
+          <li><b>4-inch square</b><span>720 × 720, 90 × 45 characters</span></li>
+          <li><b>Real keyboard</b><span>BlackBerry Q20 keys and trackpad</span></li>
+          <li><b>Raspberry Pi CM4</b><span>4 GB memory, 32 GB storage</span></li>
+          <li><b>Open source</b><span>Hardware, firmware, software</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ STATEMENT ============ -->
+    <section class="statement" aria-label="What it is for">
+      <div class="wrap">
+        <p data-words>Terminal 1 does one job, and does it well: <span class="hl">working in a shell.</span> SSH into a server. Sign in to Azure. Pair with Claude Code. Everyday Linux, on the train, in a queue, away from the desk.</p>
+      </div>
+    </section>
+
+    <!-- ============ SCREEN ============ -->
+    <section class="section raised" id="screen" aria-labelledby="screen-title">
+      <div class="wrap">
+        <div class="screen-grid">
+          <div class="device-screen reveal">
+            <div class="term" role="img" aria-label="Animated terminal on the square screen, cycling through an SSH session, az login with a device code, and a Claude Code session.">
+              <pre class="term__screen" aria-hidden="true"><span class="term__body" id="term-body"></span><span class="term__bar"><span><span class="on">0:zsh*</span> 1:ssh  2:az</span><span id="term-clock">t1 · 09:41</span></span></pre>
+            </div>
+          </div>
+          <div>
+            <span class="eyebrow">Screen</span>
+            <h2 id="screen-title" class="headline reveal">Square.<br>On purpose.</h2>
+            <p class="lead reveal" data-delay="1">A 4-inch, 720 × 720 panel holds <strong>90 columns by 45 rows</strong>. Enough for a real prompt, a tmux split or a diff — and not one pixel spent on anything else.</p>
+            <div class="scene-tabs" role="group" aria-label="Choose a terminal demo">
+              <button class="scene-tab" aria-pressed="true" data-scene="0" type="button">
+                <code>ssh</code><b>Reach any server.</b><span>Keys and sessions that follow you.</span><span class="progress" aria-hidden="true"><i></i></span>
+              </button>
+              <button class="scene-tab" aria-pressed="false" data-scene="1" type="button">
+                <code>az</code><b>Sign in to Azure.</b><span>Device-code login, no browser on the device.</span><span class="progress" aria-hidden="true"><i></i></span>
+              </button>
+              <button class="scene-tab" aria-pressed="false" data-scene="2" type="button">
+                <code>claude</code><b>Work with Claude Code.</b><span>An agent at the prompt, in your pocket.</span><span class="progress" aria-hidden="true"><i></i></span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat reveal"><b>4<small>-inch</small></b><span>IPS panel over MIPI DSI</span></div>
+          <div class="stat reveal" data-delay="1"><b>720<small>×</small>720</b><span>Pixels, perfectly square</span></div>
+          <div class="stat reveal" data-delay="2"><b>90<small>×</small>45</b><span>Characters at a readable size</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ KEYBOARD ============ -->
+    <section class="section" id="keyboard" aria-labelledby="keyboard-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">Keyboard</span>
+          <h2 id="keyboard-title" class="headline reveal">Keys you can feel.<br><span class="muted">Every one of them.</span></h2>
+          <p class="lead reveal" data-delay="1">A genuine <strong>BlackBerry Q20 keyboard</strong> with its trackpad, read by our own firmware on an RP2040. Typing at a prompt feels the way it should: precise, quiet and fast — no glass, no guesswork.</p>
+        </div>
+
+        <figure class="kb-hero reveal">
+          <picture>
+            <source type="image/webp" srcset="assets/images/keyboard-detail-520.webp">
+            <img src="assets/images/keyboard-detail-520.jpg" width="520" height="255" loading="lazy"
+                 alt="Concept render close-up of the Terminal 1 keyboard: Ctrl, Esc and Tab keys around the trackpad above the letter keys.">
+          </picture>
+          <figcaption class="caption">Concept render</figcaption>
+        </figure>
+
+        <div class="navrow reveal" aria-hidden="true">
+          <span class="key" data-key="ctrl">Ctrl</span>
+          <span class="key" data-key="esc">Esc</span>
+          <span class="trackpad" data-key="pad"></span>
+          <span class="key" data-key="tab">Tab</span>
+          <span class="key" data-key="fn">Fn</span>
+        </div>
+        <p class="navrow-caption">The navigation row, remapped for the shell.</p>
+
+        <div class="feature-grid">
+          <div class="feature reveal">
+            <span class="feature__icon">Ctrl · Esc · Tab</span>
+            <h3>The keys a shell lives on, under your thumbs.</h3>
+            <p class="copy">The phone keys above the keyboard become Ctrl, Esc, Tab and Fn. <span class="mono">Ctrl-R</span> through history, <span class="mono">Esc</span> in vim, Tab to complete — one press each.</p>
+          </div>
+          <div class="feature reveal" data-delay="1">
+            <span class="feature__icon">← ↑ ↓ →</span>
+            <h3>A trackpad that thinks in arrow keys.</h3>
+            <p class="copy">Swipe to walk shell history, move the cursor along a long command, step through a menu or hop between tmux panes. No pointer to chase.</p>
+          </div>
+          <div class="feature reveal">
+            <span class="feature__icon">sticky</span>
+            <h3>Sticky modifiers. One hand is enough.</h3>
+            <p class="copy">Tap Ctrl, then C. Tap Fn, then a key. Modifiers wait for the next key press, so shortcuts never need a three-finger stretch.</p>
+          </div>
+          <div class="feature reveal" data-delay="1">
+            <span class="feature__icon">| ~ ` { }</span>
+            <h3>The symbols phones hide, within reach.</h3>
+            <p class="copy">A Fn layer puts pipes, tildes, backticks, braces and function keys a tap away. The firmware is open, so the layout is yours to change.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ INSIDE ============ -->
+    <section class="section raised" id="inside" aria-labelledby="inside-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">Inside</span>
+          <h2 id="inside-title" class="headline reveal">A Raspberry Pi at the heart.<br><span class="muted">Two boards of our own around it.</span></h2>
+        </div>
+      </div>
+
+      <div class="explode" id="explode">
+        <div class="wrap explode__sticky">
+          <div class="stack-stage" aria-hidden="true">
+            <div class="stack" id="stack">
+              <div class="plate plate--back" style="--i:0"></div>
+              <div class="plate plate--battery" style="--i:1"></div>
+              <div class="plate plate--boards" style="--i:2"><span class="chip chip--cm4"></span><span class="chip chip--rp"></span></div>
+              <div class="plate plate--frame" style="--i:3"></div>
+              <div class="plate plate--front" style="--i:4"></div>
+            </div>
+          </div>
+          <div>
+            <ol class="stack-legend" id="stack-legend">
+              <li data-layer="4"><b>Display and keyboard</b><span>4-inch square IPS and the Q20 keys, under cover glass.</span></li>
+              <li data-layer="3"><b>Aluminium mid-frame</b><span>The spine. Carries the load and spreads the heat.</span></li>
+              <li data-layer="2"><b>Two circuit boards</b><span>CM4 on our carrier board; the RP2040 keyboard and power board.</span></li>
+              <li data-layer="1"><b>Battery</b><span>One 4,000–4,500 mAh lithium-polymer cell.</span></li>
+              <li data-layer="0"><b>Carbon fibre back</b><span>With a radio window for Wi-Fi and Bluetooth.</span></li>
+            </ol>
+            <p class="stack-note">Simplified stack, front to back. Not to scale.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="wrap">
+        <div class="cards-3">
+          <article class="card reveal">
+            <span class="tag">Compute</span>
+            <h3>Raspberry Pi Compute Module 4</h3>
+            <p class="copy">Four Arm Cortex-A72 cores, plenty for a shell and a compiler. Small enough to sit behind the screen, cool enough for a pocket.</p>
+            <ul class="specs-mini">
+              <li>4 GB memory · 32 GB eMMC</li>
+              <li>Wi-Fi and Bluetooth on board</li>
+            </ul>
+          </article>
+          <article class="card reveal" data-delay="1">
+            <span class="tag">hardware/carrier-board</span>
+            <h3>Carrier board</h3>
+            <p class="copy">Holds the CM4, drives the display, keeps time with its own real-time clock and routes the antenna to the radio window.</p>
+            <ul class="specs-mini">
+              <li>74 × 72 mm, 4 layers</li>
+              <li>MIPI DSI display · RTC with coin cell</li>
+            </ul>
+          </article>
+          <article class="card reveal" data-delay="2">
+            <span class="tag">hardware/keyboard-board</span>
+            <h3>Keyboard and power board</h3>
+            <p class="copy">An RP2040 reads the keys and trackpad and talks to Linux over USB. The same board charges the battery and turns the power button into a clean shutdown.</p>
+            <ul class="specs-mini">
+              <li>74 × 66 mm, 2 layers</li>
+              <li>USB-C charging · 5 V boost</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MATERIALS ============ -->
+    <section class="section" id="materials" aria-labelledby="materials-title">
+      <div class="wrap materials">
+        <figure class="materials__media reveal">
+          <picture>
+            <source type="image/webp" srcset="assets/images/carbon-back-480.webp 480w, assets/images/carbon-back-896.webp 896w" sizes="(max-width: 900px) 92vw, 560px">
+            <img src="assets/images/carbon-back-896.jpg" width="896" height="1200" loading="lazy"
+                 alt="Concept render of the back of Terminal 1: woven carbon fibre with a light grey radio window across the top, framed in matte black aluminium.">
+          </picture>
+          <figcaption class="caption">Concept render</figcaption>
+        </figure>
+        <div>
+          <span class="eyebrow">Materials</span>
+          <h2 id="materials-title" class="headline reveal">Carbon fibre. Aluminium. And a window.</h2>
+          <p class="copy reveal" data-delay="1">A <strong>matte black aluminium mid-frame</strong> carries the load and draws heat away from the processor. The back is <strong>woven carbon fibre</strong>: light, stiff and quietly beautiful.</p>
+          <p class="copy reveal" data-delay="2">Carbon also stops radio waves, so the top of the back is a <strong>radio window</strong>. Wi-Fi and Bluetooth get out; the weave stays.</p>
+          <ul class="callouts reveal" data-delay="2">
+            <li><span>Size</span><span>about 84 × 150 × 19 mm</span></li>
+            <li><span>Weight</span><span>250–300 g target</span></li>
+            <li><span>Frame</span><span>Aluminium, matte black</span></li>
+            <li><span>Back</span><span>Carbon fibre with radio window</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ BATTERY ============ -->
+    <section class="section raised section--tight" id="battery" aria-labelledby="battery-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">Battery and charging</span>
+          <h2 id="battery-title" class="headline reveal">An afternoon of shell.<br><span class="muted">One USB-C cable.</span></h2>
+        </div>
+        <div class="big-stats">
+          <div class="big-stat reveal">
+            <div>
+              <b>4–6<small>h</small></b>
+              <div class="battery-meter" id="battery-meter" aria-hidden="true"><i></i></div>
+            </div>
+            <div><p>Of terminal use on a charge.</p><span class="est">Estimate, to be measured</span></div>
+          </div>
+          <div class="big-stat reveal" data-delay="1">
+            <b>4–4.5<small>Ah</small></b>
+            <p>One protected lithium-polymer cell, 4,000–4,500 mAh, under the keyboard.</p>
+          </div>
+          <div class="big-stat reveal" data-delay="2">
+            <b>USB&#8209;C</b>
+            <p>Charge from the cable you already carry. The power button shuts Linux down cleanly — no corrupted cards, no surprises.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SOFTWARE ============ -->
+    <section class="section" id="software" aria-labelledby="software-title">
+      <div class="wrap sw-grid">
+        <div>
+          <span class="eyebrow">Software</span>
+          <h2 id="software-title" class="headline reveal">It boots to a shell.<br><span class="muted">That’s the interface.</span></h2>
+          <p class="lead reveal" data-delay="1">No launcher, no app store, no notifications. Terminal 1 starts straight into a full-screen terminal and gets out of the way.</p>
+          <ul class="tools reveal" data-delay="2" aria-label="Ready on day one">
+            <li>ssh</li><li>az</li><li>claude</li><li>git</li><li>vim</li><li>tmux</li>
+          </ul>
+        </div>
+        <div class="sw-stack reveal" data-delay="1" role="list" aria-label="Software stack, top to bottom">
+          <div class="sw-layer" role="listitem"><b>tmux</b><span>Sessions that survive</span></div>
+          <div class="sw-layer" role="listitem"><b>zsh</b><span>Your shell, your dotfiles</span></div>
+          <div class="sw-layer" role="listitem"><b>foot</b><span>Fast, minimal Wayland terminal</span></div>
+          <div class="sw-layer" role="listitem"><b>cage</b><span>Kiosk compositor: one app, full screen</span></div>
+          <div class="sw-layer" role="listitem"><b>Linux</b><span>64-bit, on the CM4</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3D MODEL ============ -->
+    <section class="section raised" id="model" aria-labelledby="model-title">
+      <div class="wrap">
+        <div class="section-head section-head--center">
+          <span class="eyebrow">3D model</span>
+          <h2 id="model-title" class="headline reveal">Turn it over.<br><span class="muted">It’s all in the open.</span></h2>
+          <p class="lead reveal" data-delay="1">The enclosure is modelled in Onshape with FeatureScript, driven by the same numbers as the circuit boards. Drag to look around; open the live CAD to see every part.</p>
+        </div>
+
+        <div class="model-stage reveal" id="model-stage" data-state="fallback" data-src="assets/models/terminal-1.glb">
+          <div class="model-fallback">
+            <picture>
+              <source type="image/webp" srcset="assets/images/front-three-quarter-896.webp">
+              <img src="assets/images/front-three-quarter-896.jpg" width="896" height="1200" loading="lazy"
+                   alt="Concept render of Terminal 1, shown until the 3D model is exported from CAD.">
+            </picture>
+          </div>
+          <model-viewer id="model-viewer"
+            alt="Interactive 3D model of the Terminal 1 enclosure, exported from Onshape."
+            camera-controls auto-rotate auto-rotate-delay="1500" rotation-per-second="18deg"
+            interaction-prompt="none" touch-action="pan-y"
+            environment-image="neutral" exposure="0.85" shadow-intensity="1.1" shadow-softness="0.9"
+            camera-orbit="-30deg 72deg auto" field-of-view="28deg"
+            tone-mapping="aces" loading="eager"></model-viewer>
+          <p class="model-hint">Drag to turn · Pinch or scroll to zoom</p>
+          <div class="model-toolbar" id="model-toolbar" hidden>
+            <button class="chip-btn" type="button" id="explode-btn" aria-pressed="false" hidden>Exploded view</button>
+          </div>
+          <p class="model-note" id="model-note" role="status"><span class="dot" aria-hidden="true"></span><span id="model-note-text">3D model coming with the first CAD export</span></p>
+        </div>
+
+        <div class="model-meta">
+          <p>Exported from Onshape as glTF. The live document is public: inspect the FeatureScript, measure parts, or copy it and make your own.</p>
+          <a class="btn btn--accent" href="https://cad.onshape.com/documents/8bfe7e43f7d7ec8135f9a829/w/29c38cad0998e4a6472b08e0/e/69201118ddf43601f28283ef" target="_blank" rel="noopener">Open the live CAD in Onshape <span aria-hidden="true">↗</span><span class="visually-hidden">(opens in a new tab)</span></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SPECS ============ -->
+    <section class="section paper" id="specs" aria-labelledby="specs-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">Specifications</span>
+          <h2 id="specs-title" class="headline">Terminal 1, in detail.</h2>
+          <p class="lead">Targets for the first prototype. Anything marked <span class="est-tag" style="margin-left:0">est.</span> is an estimate until it’s measured.</p>
+        </div>
+        <dl class="specs">
+          <div class="spec-row">
+            <dt>Display</dt>
+            <dd>
+              <p class="spec"><b>4-inch square IPS</b>720 × 720 pixels, MIPI DSI</p>
+              <p class="spec"><b>90 × 45 characters</b>Full-screen terminal</p>
+            </dd>
+          </div>
+          <div class="spec-row">
+            <dt>Keyboard</dt>
+            <dd>
+              <p class="spec"><b>BlackBerry Q20 keyboard</b>With trackpad, as a replacement part</p>
+              <p class="spec"><b>RP2040 firmware</b>Ctrl, Esc, Tab, Fn · sticky modifiers · trackpad as arrow keys</p>
+            </dd>
+          </div>
+          <div class="spec-row">
+            <dt>Compute</dt>
+            <dd>
+              <p class="spec"><b>Raspberry Pi CM4</b>Quad-core Arm Cortex-A72</p>
+              <p class="spec"><b>4 GB · 32 GB</b>Memory · eMMC storage</p>
+            </dd>
+          </div>
+          <div class="spec-row">
+            <dt>Wireless</dt>
+            <dd>
+              <p class="spec"><b>Wi-Fi and Bluetooth</b>From the CM4, through a radio window in the back</p>
+              <p class="spec"><b>Mobile data</b>Not in Terminal 1 — planned for Terminal 2</p>
+            </dd>
+          </div>
+          <div class="spec-row">
+            <dt>Power</dt>
+            <dd>
+              <p class="spec"><b>4,000–4,500 mAh</b>Single protected Li-Po cell</p>
+              <p class="spec"><b>4–6 h<span class="est-tag">est.</span></b>Terminal use per charge</p>
+              <p class="spec"><b>USB-C</b>Charging · clean shutdown from the power button</p>
+            </dd>
+          </div>
+          <div class="spec-row">
+            <dt>Size and weight</dt>
+            <dd>
+              <p class="spec"><b>84 × 150 × 19 mm<span class="est-tag">est.</span></b>Width × height × depth</p>
+              <p class="spec"><b>250–300 g<span class="est-tag">target</span></b>To be weighed</p>
+            </dd>
+          </div>
+          <div class="spec-row">
+            <dt>Materials</dt>
+            <dd>
+              <p class="spec"><b>Aluminium mid-frame</b>Matte black</p>
+              <p class="spec"><b>Carbon fibre back</b>With radio window</p>
+            </dd>
+          </div>
+          <div class="spec-row">
+            <dt>Software</dt>
+            <dd>
+              <p class="spec"><b>64-bit Linux</b>Boots straight to the terminal</p>
+              <p class="spec"><b>cage + foot</b>zsh and tmux · OpenSSH, Azure CLI, Claude Code</p>
+            </dd>
+          </div>
+          <div class="spec-row">
+            <dt>Boards</dt>
+            <dd>
+              <p class="spec"><b>Carrier board</b>74 × 72 mm, 4 layers, KiCad</p>
+              <p class="spec"><b>Keyboard and power board</b>74 × 66 mm, 2 layers, KiCad</p>
+            </dd>
+          </div>
+        </dl>
+        <p class="specs-foot">Nothing has been built or tested yet. Figures come from datasheets and hand calculations and will change as the prototype is measured. BlackBerry is a trademark of its owner; Terminal 1 uses the Q20 keyboard as a part and is not affiliated with or endorsed by BlackBerry.</p>
+      </div>
+    </section>
+
+    <!-- ============ VIBE CODED ============ -->
+    <section class="section vibe" id="vibe-coded" aria-labelledby="vibe-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="vibe-badge">How this is made</span>
+          <h2 id="vibe-title" class="display reveal">Built in the open.<br><span class="soft">Vibe coded.</span></h2>
+          <p class="lead reveal" data-delay="1">Terminal 1 is designed together with an AI coding assistant, <strong>Claude Code</strong>. The plans, the CAD FeatureScript, the schematics, the firmware — and this website — start as conversations. A person reviews every change before it lands.</p>
+          <ul class="made-list reveal" data-delay="2" aria-label="Made with Claude Code">
+            <li>Prototype plan</li><li>CAD FeatureScript</li><li>KiCad schematics</li><li>RP2040 firmware</li><li>Linux setup</li><li>This website</li>
+          </ul>
+        </div>
+        <div class="vibe-grid">
+          <ul class="vibe-points">
+            <li class="reveal"><h3>Nothing is built yet.</h3><p>There’s no device to buy and no prototype on a desk. This is a plan, with CAD, schematics and firmware in progress.</p></li>
+            <li class="reveal"><h3>Every number is an estimate.</h3><p>Battery life, size and weight are targets until they’re measured — and they’ll be updated here when they are.</p></li>
+            <li class="reveal"><h3>The pictures are concept renders.</h3><p>AI-generated, to show the idea. Not photographs of hardware.</p></li>
+            <li class="reveal"><h3>Decisions are written down.</h3><p>Every design choice gets a short decision record, so you can see what was chosen and why — and argue with it.</p></li>
+          </ul>
+          <div class="session reveal" data-delay="1" aria-label="Example of a design session with Claude Code">
+            <div class="session__bar"><i></i><i></i><i></i><span>~/terminal-1</span></div>
+<pre><span class="t-p">~/terminal-1 ❯</span> claude
+<span class="t-c">✻</span> <span class="t-b">Welcome to Claude Code</span>
+
+<span class="t-m">&gt;</span> The FFC between the boards needs 6 contacts
+  for 5 V at 3 A. Update the pinout everywhere.
+
+<span class="t-c">●</span> Read <span class="t-d">system/plan/interfaces.md</span>
+<span class="t-c">●</span> Update pins 2–7 to +5V_CM4
+<span class="t-c">●</span> Update <span class="t-d">hardware/carrier-board</span> schematic
+<span class="t-c">●</span> Update <span class="t-d">hardware/keyboard-board</span> schematic
+<span class="t-c">●</span> Add a decision record
+
+  <span class="t-a">Ready for review.</span> 4 files changed.
+<span class="t-m">  A human reads the diff before it merges.</span></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ROADMAP ============ -->
+    <section class="section raised" id="roadmap" aria-labelledby="roadmap-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">Roadmap</span>
+          <h2 id="roadmap-title" class="headline reveal">From bench to pocket<br><span class="muted">in about 18 weeks.</span></h2>
+          <p class="lead reveal" data-delay="1">Six phases, each with a gate it has to pass before the next one counts. Weeks are estimates; the gates aren’t.</p>
+        </div>
+
+        <div class="roadmap">
+          <div class="rm-axis" aria-hidden="true">
+            <span class="rm-axis__label">Phase and gate</span>
+            <div class="rm-axis__scale">
+              <span style="left:0">wk 0</span><span style="left:15%">3</span><span style="left:30%">6</span><span style="left:45%">9</span><span style="left:60%">12</span><span style="left:75%">15</span><span style="left:90%">18</span>
+            </div>
+          </div>
+          <ol>
+            <li class="rm-row rm-row--now">
+              <div class="rm-row__text">
+                <h3><span class="phase">Phase 0</span> Bench prototype <span class="here"><span class="dot" aria-hidden="true"></span>We are here</span></h3>
+                <p class="when">Weeks 1–3</p>
+                <p class="gate"><b>Gate:</b> SSH, az login and Claude Code from the bench keyboard.</p>
+              </div>
+              <div class="rm-track" aria-hidden="true"><span class="rm-bar" style="--s:0;--e:3"></span></div>
+            </li>
+            <li class="rm-row">
+              <div class="rm-row__text">
+                <h3><span class="phase">Phase 1</span> Keyboard and power board</h3>
+                <p class="when">Weeks 3–6</p>
+                <p class="gate"><b>Gate:</b> reliable typing, safe charging, and the power button shuts Linux down cleanly.</p>
+              </div>
+              <div class="rm-track" aria-hidden="true"><span class="rm-bar" style="--s:2;--e:6"></span></div>
+            </li>
+            <li class="rm-row">
+              <div class="rm-row__text">
+                <h3><span class="phase">Phase 2</span> Carrier board</h3>
+                <p class="when">Weeks 6–12</p>
+                <p class="gate"><b>Gate:</b> boots from battery with the screen and Wi-Fi working.</p>
+              </div>
+              <div class="rm-track" aria-hidden="true"><span class="rm-bar" style="--s:5;--e:12"></span></div>
+            </li>
+            <li class="rm-row">
+              <div class="rm-row__text">
+                <h3><span class="phase">Phase 3</span> Enclosure</h3>
+                <p class="when">Weeks 8–14 · printed shells, then the aluminium mid-frame and carbon back</p>
+                <p class="gate"><b>Gate:</b> fits a jacket pocket, stays cool, and Wi-Fi works with the back fitted.</p>
+              </div>
+              <div class="rm-track" aria-hidden="true"><span class="rm-bar" style="--s:7;--e:14"></span></div>
+            </li>
+            <li class="rm-row">
+              <div class="rm-row__text">
+                <h3><span class="phase">Phase 4</span> Daily driver</h3>
+                <p class="when">Weeks 14–18</p>
+                <p class="gate"><b>Gate:</b> two weeks without reaching for the laptop.</p>
+              </div>
+              <div class="rm-track" aria-hidden="true"><span class="rm-bar" style="--s:13;--e:18"></span></div>
+            </li>
+            <li class="rm-row rm-row--next">
+              <div class="rm-row__text">
+                <h3><span class="phase">Phase 5</span> Terminal 2</h3>
+                <p class="when">Next</p>
+                <p class="gate">A mobile modem, a bigger battery and an optional CM5.</p>
+              </div>
+              <div class="rm-track" aria-hidden="true"><span class="rm-bar" style="--s:18;--e:20"></span></div>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ OPEN SOURCE ============ -->
+    <section class="section paper" id="open-source" aria-labelledby="os-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">Open source</span>
+          <h2 id="os-title" class="headline">Open, all the way down.</h2>
+          <p class="lead">The CAD, the circuit boards, the firmware, the Linux setup and the documents are all public. Build one, change it, or help make the first one real.</p>
+          <div class="btn-row" style="margin-top:32px">
+            <a class="btn btn--primary" href="#open-source" data-repo="">
+              <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+              View on GitHub
+            </a>
+            <a class="btn btn--ghost" href="#open-source" data-repo="/labels/good%20first%20issue">Good first issues</a>
+          </div>
+        </div>
+
+        <div class="licences">
+          <div class="licence"><span class="what">Hardware</span><b>CERN-OHL-S-2.0</b><p>Strongly reciprocal open hardware. Make and sell it; share your changes to the design.</p></div>
+          <div class="licence"><span class="what">Software and firmware</span><b>MIT</b><p>Use it anywhere, for anything. Keep the notice.</p></div>
+          <div class="licence"><span class="what">Documentation</span><b>CC BY-SA 4.0</b><p>Share and adapt the docs, with credit, under the same terms.</p></div>
+        </div>
+
+        <h3 class="title" style="margin-top:clamp(64px,9vw,104px);margin-bottom:24px">Where you can help</h3>
+        <div class="contrib">
+          <a href="https://cad.onshape.com/documents/8bfe7e43f7d7ec8135f9a829/w/29c38cad0998e4a6472b08e0/e/69201118ddf43601f28283ef" target="_blank" rel="noopener">
+            <span class="area">CAD</span><h3>Enclosure</h3><p>Onshape FeatureScript for the frame, back and printed shells.</p><span class="go">Open in Onshape ↗</span>
+          </a>
+          <a href="#open-source" data-repo="/tree/main/hardware">
+            <span class="area">KiCad</span><h3>Circuit boards</h3><p>Review the carrier and keyboard-and-power schematics and layouts.</p><span class="go">hardware/ ›</span>
+          </a>
+          <a href="#open-source" data-repo="/tree/main/firmware">
+            <span class="area">Firmware</span><h3>RP2040</h3><p>Key matrix, trackpad, sticky modifiers, Fn layer and power handling.</p><span class="go">firmware/ ›</span>
+          </a>
+          <a href="#open-source" data-repo="/tree/main/linux">
+            <span class="area">Linux</span><h3>The image</h3><p>Boot to cage and foot, display and keyboard drivers, power management.</p><span class="go">linux/ ›</span>
+          </a>
+          <a href="#open-source" data-repo="/tree/main/docs">
+            <span class="area">Docs</span><h3>Guides and records</h3><p>Build guides, decision records, photos and fixing what’s unclear.</p><span class="go">docs/ ›</span>
+          </a>
+        </div>
+
+        <ol class="steps">
+          <li><h3>Pick an issue</h3><p>Start with one labelled <code>good first issue</code>, or open one for anything that looks wrong.</p></li>
+          <li><h3>Say hello</h3><p>Comment on the issue so nobody duplicates the work, and ask anything.</p></li>
+          <li><h3>Keep it small</h3><p>Send a focused pull request. AI-assisted work is welcome; tell us, and check it yourself.</p></li>
+          <li><h3>Write it down</h3><p>Bigger design changes get a short decision record in <code>docs/decisions</code>.</p></li>
+        </ol>
+
+        <div class="cta-band">
+          <h3>Help build the first one.</h3>
+          <div class="btn-row">
+            <a class="btn btn--primary" href="#open-source" data-repo="">Star the repository</a>
+            <a class="btn btn--ghost" href="#roadmap">See the roadmap</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <div class="footer__top">
+        <div class="footer__brand">
+          <a class="brand" href="#top"><img class="brand__mark" src="assets/images/favicon.svg" alt="" width="24" height="24">Terminal 1</a>
+          <p>An open-source pocket Linux terminal. A prototype plan, designed in the open.</p>
+        </div>
+        <div>
+          <h2>Product</h2>
+          <ul>
+            <li><a href="#screen">Screen</a></li>
+            <li><a href="#keyboard">Keyboard</a></li>
+            <li><a href="#inside">Inside</a></li>
+            <li><a href="#specs">Specifications</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Project</h2>
+          <ul>
+            <li><a href="#roadmap">Roadmap</a></li>
+            <li><a href="#vibe-coded">How it’s made</a></li>
+            <li><a href="https://cad.onshape.com/documents/8bfe7e43f7d7ec8135f9a829/w/29c38cad0998e4a6472b08e0/e/69201118ddf43601f28283ef" target="_blank" rel="noopener">Onshape CAD</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Contribute</h2>
+          <ul>
+            <li><a href="#open-source" data-repo="">GitHub</a></li>
+            <li><a href="#open-source" data-repo="/labels/good%20first%20issue">Good first issues</a></li>
+            <li><a href="#open-source" data-repo="/tree/main/docs/decisions">Decision records</a></li>
+          </ul>
+        </div>
+      </div>
+      <p class="footer__vibe">Vibe coded with Claude Code and reviewed by humans. Concept renders are AI-generated. Nothing has been built or tested yet; all specifications are estimates.</p>
+      <p class="footer__legal">Hardware CERN-OHL-S-2.0 · Software MIT · Documentation CC BY-SA 4.0. BlackBerry is a trademark of its owner and Raspberry Pi is a trademark of Raspberry Pi Ltd; Terminal 1 is not affiliated with either.</p>
+    </div>
+  </footer>
+</body>
+</html>

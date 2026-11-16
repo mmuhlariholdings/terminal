@@ -1,0 +1,8 @@
+#!/bin/sh
+# Started by foot inside cage on tty1 (see /etc/xdg/foot/foot.ini, shell=).
+# Attach to the "main" tmux session, creating it if needed. If tmux fails for any
+# reason, fall back to a plain login shell so the device is never a dead screen.
+if command -v tmux >/dev/null 2>&1; then
+    tmux new-session -A -s main && exit 0
+fi
+exec "${SHELL:-/bin/sh}" -l

@@ -1,0 +1,27 @@
+[Unit]
+Description=Terminal 1 keyboard status daemon (battery, power events, keyboard control)
+Documentation=file:///opt/terminal-1/linux/README.md
+After=systemd-udevd.service
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/default/terminal-1-statusd
+ExecStart=/usr/local/bin/terminal-1-statusd $TERMINAL_1_STATUSD_OPTIONS
+Restart=always
+RestartSec=2
+RuntimeDirectory=terminal-1
+RuntimeDirectoryMode=0755
+# Runs as root: it needs the serial port, /dev/input (idle dimming),
+# /sys/class/backlight and `systemctl poweroff`. Everything else is locked down.
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX
+RestrictRealtime=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+
+[Install]
+WantedBy=multi-user.target

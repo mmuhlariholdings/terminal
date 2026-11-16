@@ -1,0 +1,9 @@
+# Terminal 1 keyboard board (RP2040), system/plan/interfaces.md section 7.
+# VID 0x1209 / PID 0x0001 is the pid.codes TEST ID: update both lines here when the
+# project gets its own PID. ID_USB_INTERFACE_NUM comes from 60-serial.rules (usb_id).
+
+# Stable name for the CDC "status" port (interface 3): /dev/terminal-1-status
+SUBSYSTEM=="tty", ENV{ID_VENDOR_ID}=="1209", ENV{ID_MODEL_ID}=="0001", ENV{ID_USB_INTERFACE_NUM}=="03", SYMLINK+="terminal-1-status", MODE="0660", GROUP="dialout"
+
+# Make sure systemd-logind watches the keyboard's System Power Down key (KEY_POWER).
+SUBSYSTEM=="input", KERNEL=="event*", ENV{ID_VENDOR_ID}=="1209", ENV{ID_MODEL_ID}=="0001", TAG+="power-switch"

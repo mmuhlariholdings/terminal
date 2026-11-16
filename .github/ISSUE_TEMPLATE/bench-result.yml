@@ -1,0 +1,25 @@
+name: Bench result
+description: Report a build, a measurement or a phase-gate test on real hardware
+labels: [bench result]
+body:
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Phase
+      options: ["0 · Bench prototype", "1 · Keyboard and power board", "2 · Carrier board", "3 · Enclosure", "4 · Daily driver"]
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: Set-up
+      description: Hardware (exact parts), firmware / image version, commit hash
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: What you measured or saw
+      description: Numbers with units, photos, logs. Pass or fail against the gate?
+    validations:
+      required: true

@@ -1,0 +1,85 @@
+** Drc report for carrier-board.kicad_pcb **
+** Created on 2026-11-16T19:27:26 **
+** Report includes: Errors, Warnings, Exclusions **
+
+** Found 0 DRC violations **
+
+** Found 16 unconnected pads **
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(36.0500 mm, 59.4625 mm): Pad 6 [/USB_CM4_D_P] of U1 on F.Cu
+    @(36.0500 mm, 61.7375 mm): Pad 1 [/USB_CM4_D_P] of U1 on F.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(36.0500 mm, 59.4625 mm): Pad 6 [/USB_CM4_D_P] of U1 on F.Cu
+    @(30.5000 mm, 18.5800 mm): Pad 5 [/USB_CM4_D_P] of J2 on F.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(36.0500 mm, 61.7375 mm): Pad 1 [/USB_CM4_D_P] of U1 on F.Cu
+    @(36.7500 mm, 65.1500 mm): Pad 12 [/USB_CM4_D_P] of J3 on F.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(37.2500 mm, 65.1500 mm): Pad 13 [/USB_CM4_D_N] of J3 on F.Cu
+    @(37.9500 mm, 61.7375 mm): Pad 3 [/USB_CM4_D_N] of U1 on F.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(37.9500 mm, 59.4625 mm): Pad 4 [/USB_CM4_D_N] of U1 on F.Cu
+    @(30.1000 mm, 18.5800 mm): Pad 3 [/USB_CM4_D_N] of J2 on F.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(37.9500 mm, 61.7375 mm): Pad 3 [/USB_CM4_D_N] of U1 on F.Cu
+    @(37.9500 mm, 59.4625 mm): Pad 4 [/USB_CM4_D_N] of U1 on F.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(44.5000 mm, 18.5800 mm): Pad 75 [/DSI1_D0_N] of J2 on F.Cu
+    @(52.5000 mm, 6.7500 mm): Pad 2 [/DSI1_D0_N] of J4 on F.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(44.9000 mm, 18.5800 mm): Pad 77 [/DSI1_D0_P] of J2 on F.Cu
+    @(52.0000 mm, 6.7500 mm): Pad 3 [/DSI1_D0_P] of J4 on F.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(45.7000 mm, 18.5800 mm): Pad 81 [/DSI1_D1_N] of J2 on F.Cu
+    @(51.0000 mm, 6.7500 mm): Pad 5 [/DSI1_D1_N] of J4 on F.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(46.1000 mm, 18.5800 mm): Pad 83 [/DSI1_D1_P] of J2 on F.Cu
+    @(50.5000 mm, 6.7500 mm): Pad 6 [/DSI1_D1_P] of J4 on F.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(46.9000 mm, 18.5800 mm): Pad 87 [/DSI1_C_N] of J2 on F.Cu
+    @(49.5000 mm, 6.7500 mm): Pad 8 [/DSI1_C_N] of J4 on F.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(47.3000 mm, 18.5800 mm): Pad 89 [/DSI1_C_P] of J2 on F.Cu
+    @(49.0000 mm, 6.7500 mm): Pad 9 [/DSI1_C_P] of J4 on F.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(48.0000 mm, 6.7500 mm): Pad 11 [/DSI1_D2_N] of J4 on F.Cu
+    @(48.1000 mm, 18.5800 mm): Pad 93 [/DSI1_D2_N] of J2 on F.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(46.5000 mm, 6.7500 mm): Pad 14 [/DSI1_D3_N] of J4 on F.Cu
+    @(48.1000 mm, 15.5000 mm): Pad 94 [/DSI1_D3_N] of J2 on F.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(47.5000 mm, 6.7500 mm): Pad 12 [/DSI1_D2_P] of J4 on F.Cu
+    @(48.5000 mm, 18.5800 mm): Pad 95 [/DSI1_D2_P] of J2 on F.Cu
+[unconnected_items]: Missing connection between items
+    Local override; error
+    @(46.0000 mm, 6.7500 mm): Pad 15 [/DSI1_D3_P] of J4 on F.Cu
+    @(48.5000 mm, 15.5000 mm): Pad 96 [/DSI1_D3_P] of J2 on F.Cu
+
+** Found 0 Footprint errors **
+
+** Ignored checks **
+    - Footprint has no courtyard defined
+    - Track endpoint not centered on via
+    - Tuning profile track geometries
+    - Footprint doesn't match symbol's footprint filters
+    - Silkscreen clearance
+    - Silkscreen clipped by solder mask
+    - Silkscreen clipped by board edge
+    - Footprint component type doesn't match footprint pads
+
+** End of Report **

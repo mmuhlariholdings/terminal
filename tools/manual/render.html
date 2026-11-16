@@ -1,0 +1,40 @@
+<!doctype html>
+<!-- Still-image renderer for the technical manual. Opened by tools/build_manual.py in headless Chrome:
+     render.html?model=<path to .glb>&explode=0..1&parts=<regex of part names to pick out>
+     It drives the 3D viewer (viewer.js) and Chrome saves a screenshot. -->
+<html lang="en"><head><meta charset="utf-8"><title>render</title>
+<style>
+  html, body { margin: 0; background: #fff; }
+  #stage { position: fixed; inset: 0; }
+  #stage canvas { width: 100%; height: 100%; display: block; }
+  .hidden { display: none; }
+</style></head><body>
+<div id="stage"><canvas></canvas></div>
+<div class="hidden"><input type="range" id="explode" min="0" max="100" value="0"><div id="status"></div>
+<div id="steps"><button data-step="0">step</button></div></div>
+<script src="vendor/three.min.js"></script>
+<script src="vendor/GLTFLoader.js"></script>
+<script src="viewer.js"></script>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var parts = q.get("parts");
+  var explode = parseFloat(q.get("explode") || "0");
+  var rename = {};
+  try { rename = JSON.parse(q.get("rename") || "{}"); } catch (e) {}
+  var wrap = document.getElementById("stage");
+  TDViewer({ wrap: wrap, list: null, steps: parts ? document.getElementById("steps") : null,
+    slider: document.getElementById("explode"), xray: null, reset: null, status: document.getElementById("status"),
+    model: q.get("model"), rename: rename, stepDefs: parts ? [{ parts: parts }] : null, initialExplode: explode,
+    zoom: parseFloat(q.get("zoom") || "1"), yaw: q.get("yaw") ? parseFloat(q.get("yaw")) : null, pitch: q.get("pitch") ? parseFloat(q.get("pitch")) : null,
+    background: 0xf4f4f2, noGrid: true });
+  // once the model has loaded, pick out this step's parts (the viewer explodes to 0.6 and ghosts the rest)
+  var t = setInterval(function () {
+    if (!wrap.classList.contains("ready")) return;
+    clearInterval(t);
+    if (parts) document.querySelector("#steps [data-step]").click();
+    document.title = "ready";
+  }, 50);
+})();
+</script>
+</body></html>

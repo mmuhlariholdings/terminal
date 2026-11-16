@@ -1,0 +1,68 @@
+# Terminal 1 zsh settings. Installed to /etc/terminal-1/zshrc and sourced from ~/.zshrc,
+# so your own ~/.zshrc lines after the `source` line win.
+
+# --- PATH: native Claude Code installer and npm user prefix put binaries here ---
+typeset -U path
+path=("$HOME/.local/bin" "$HOME/.npm-global/bin" $path)
+export PATH
+
+export EDITOR=${EDITOR:-nano}
+export PAGER=${PAGER:-less}
+export LESS="-R"
+
+# --- history ---
+HISTFILE=$HOME/.zsh_history
+HISTSIZE=20000
+SAVEHIST=20000
+setopt share_history hist_ignore_dups hist_ignore_space hist_reduce_blanks extended_history
+
+# --- completion and line editing ---
+autoload -Uz compinit && compinit -d "$HOME/.zcompdump"
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
+setopt auto_cd interactive_comments no_beep
+bindkey -e
+# Up/Down search history by prefix (handy with the trackpad in arrow mode).
+autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+bindkey '^[[A' up-line-or-beginning-search
+bindkey '^[[B' down-line-or-beginning-search
+
+# --- prompt: short, because the screen is 90 columns ---
+autoload -Uz vcs_info
+precmd() { vcs_info }
+zstyle ':vcs_info:git:*' formats ' %b'
+setopt prompt_subst
+PROMPT='%F{cyan}%2~%f%F{yellow}${vcs_info_msg_0_}%f %(?.%F{green}.%F{red})%#%f '
+
+# --- SSH agent: one per login, keys expire after 4 hours ---
+# Keys are added on first use (AddKeysToAgent in /etc/ssh/ssh_config.d/terminal-1.conf).
+if [[ -z "$SSH_AUTH_SOCK" && -n "$XDG_RUNTIME_DIR" ]]; then
+  export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+  ssh-add -l >/dev/null 2>&1
+  if [[ $? -eq 2 ]]; then   # 2 = no agent listening on the socket
+    rm -f "$SSH_AUTH_SOCK"
+    ssh-agent -a "$SSH_AUTH_SOCK" -t 4h >/dev/null
+  fi
+fi
+
+# --- images built by linux/image ship with a known password ---
+if [[ -e /etc/terminal-1/default-password-in-use ]]; then
+  print -P "%F{red}This device still has the image's default password.%f Run: passwd && sudo rm /etc/terminal-1/default-password-in-use"
+fi
+
+# --- Terminal 1 helpers ---
+alias wifi='nmtui'
+alias battery='terminal-1-ctl status | grep -E "^battery_"'
+alias lock='tmux lock-client'
+alias ll='ls -lah --color=auto'
+alias ls='ls --color=auto'
+# Device-code sign-in: no browser on this device.
+alias azlogin='az login --use-device-code'
+# End cloud sessions when you are done (see linux/security.md).
+logout-cloud() {
+  command -v az >/dev/null && az logout 2>/dev/null; az account clear 2>/dev/null
+  ssh-add -D 2>/dev/null
+  echo "Azure CLI signed out and SSH agent emptied. Claude Code: run /logout inside claude."
+}

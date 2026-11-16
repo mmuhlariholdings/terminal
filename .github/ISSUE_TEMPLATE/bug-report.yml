@@ -1,0 +1,22 @@
+name: Something is wrong
+description: A mistake in the design files, firmware, Linux setup, docs or website
+labels: [bug]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [Keyboard board, Carrier board, Enclosure / CAD, Firmware, Linux, Documentation, Website, Other]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What is wrong
+      description: File and line, part number or screenshot. If a datasheet disagrees with our files, link the datasheet and page.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What it should be, and how you know
